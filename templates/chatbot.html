@@ -80,9 +80,9 @@
         }
     }
 
-    function submitChat() {
-        // UI Mockup functionality only
-        const inputStr = document.getElementById('chatInput').value;
+    async function submitChat() {
+        const inputEl = document.getElementById('chatInput');
+        const inputStr = inputEl.value;
         if (!inputStr.trim()) return;
 
         const chatArea = document.querySelector('#chatbot-window .overflow-y-auto');
@@ -99,38 +99,114 @@
             </div>
         `;
         chatArea.appendChild(userMsg);
-        document.getElementById('chatInput').value = '';
+        inputEl.value = '';
         chatArea.scrollTop = chatArea.scrollHeight;
         
         // Simulate typing delay & response
-        setTimeout(() => {
+        const aiTypingIndicator = document.createElement('div');
+        aiTypingIndicator.className = 'flex items-start gap-2 max-w-[85%]';
+        aiTypingIndicator.innerHTML = `
+            <div class="w-6 h-6 rounded-full bg-gradient-to-r from-primary to-blue-600 flex items-center justify-center shrink-0 mt-1">
+                <span class="material-symbols-outlined text-white text-[12px]">smart_toy</span>
+            </div>
+            <div class="bg-white border border-slate-200 text-slate-700 px-3 py-2.5 rounded-2xl rounded-tl-sm text-sm shadow-sm flex items-center gap-1">
+                <span class="inline-block w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></span>
+                <span class="inline-block w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></span>
+                <span class="inline-block w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
+            </div>
+        `;
+        chatArea.appendChild(aiTypingIndicator);
+        chatArea.scrollTop = chatArea.scrollHeight;
+        
+        try {
+            // Asynchronous Fetch mapping directly to secure Pandas computation
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: inputStr })
+            });
+
+            const data = await response.json();
+            
+            // Remove typing indicator visually
+            chatArea.removeChild(aiTypingIndicator);
+            
+            // Generate standard AI bubble dynamically tracking outputs
+            // Generate standard AI bubble dynamically tracking outputs
+            const rawText = data.final_response || "Here are the results";
+            let formattedText = rawText;
+            if (typeof marked !== 'undefined') {
+                formattedText = marked.parse(rawText);
+            } else {
+                // Fallback parser if CDN fails
+                formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                formattedText = formattedText.replace(/\n\n/g, '<br><br>');
+                formattedText = formattedText.replace(/\n/g, '<br>');
+            }
+            let textHtml = `<div class="mb-3 prose prose-sm prose-slate max-w-none text-slate-700 leading-snug prose-li:my-0.5 prose-p:my-1 prose-strong:text-blue-900">${formattedText}</div>`;
+            
+            // Layout isolated metric tables locally within HTML string natively 
+            if (data.data_result && data.data_result.length > 0) {
+                // If it is just an error response layout inside red text block
+                if (data.data_result[0].error) {
+                     textHtml += `<div class="text-xs text-red-600 bg-red-50 p-2 rounded">${data.data_result[0].error}</div>`;
+                } else {
+                     textHtml += `<div class="overflow-x-auto rounded border border-slate-200 mt-2">
+                                     <table class="w-full text-left text-xs">
+                                         <thead class="bg-slate-100 text-slate-600 uppercase">
+                                             <tr>`;
+                     const columns = Object.keys(data.data_result[0]);
+                     columns.forEach(col => {
+                         textHtml += `<th class="px-2 py-1 font-semibold border-b">${col}</th>`;
+                     });
+                     textHtml += `</tr></thead><tbody class="divide-y divide-slate-100">`;
+                     
+                     data.data_result.forEach(row => {
+                         textHtml += `<tr>`;
+                         columns.forEach(col => {
+                             let cellVal = row[col];
+                             // Format floats appropriately isolating huge decimals mapping cleanly
+                             if (typeof cellVal === 'number' && !Number.isInteger(cellVal)) { cellVal = cellVal.toFixed(2); }
+                             textHtml += `<td class="px-2 py-1 whitespace-nowrap">${cellVal}</td>`;
+                         });
+                         textHtml += `</tr>`;
+                     });
+                     textHtml += `</tbody></table></div>`;
+                }
+            } else if (data.data_result && data.data_result.length === 0) {
+                 textHtml += `<div class="text-xs italic text-slate-400">No matching records found.</div>`;
+            }
+
             const aiMsg = document.createElement('div');
-            aiMsg.className = 'flex items-start gap-2 max-w-[85%]';
+            aiMsg.className = 'flex items-start gap-2 max-w-[95%]';
             aiMsg.innerHTML = `
                 <div class="w-6 h-6 rounded-full bg-gradient-to-r from-primary to-blue-600 flex items-center justify-center shrink-0 mt-1">
                     <span class="material-symbols-outlined text-white text-[12px]">smart_toy</span>
                 </div>
-                <div class="bg-white border border-slate-200 text-slate-700 px-3 py-2.5 rounded-2xl rounded-tl-sm text-sm shadow-sm flex items-center gap-1">
-                    <span class="inline-block w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></span>
-                    <span class="inline-block w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></span>
-                    <span class="inline-block w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
+                <div class="bg-white border border-slate-200 text-slate-700 px-3 py-2.5 rounded-2xl rounded-tl-sm text-sm shadow-sm">
+                    ${textHtml}
                 </div>
             `;
             chatArea.appendChild(aiMsg);
-            chatArea.scrollTop = chatArea.scrollHeight;
             
-            // Replace with fake answer
-            setTimeout(() => {
-                aiMsg.innerHTML = `
-                    <div class="w-6 h-6 rounded-full bg-gradient-to-r from-primary to-blue-600 flex items-center justify-center shrink-0 mt-1">
-                        <span class="material-symbols-outlined text-white text-[12px]">smart_toy</span>
-                    </div>
-                    <div class="bg-white border border-slate-200 text-slate-700 px-3 py-2.5 rounded-2xl rounded-tl-sm text-sm shadow-sm">
-                        I am currently a demonstration UI. The API backend integration has not yet been linked to process real data queries!
-                    </div>
-                `;
-                chatArea.scrollTop = chatArea.scrollHeight;
-            }, 1200);
-        }, 500);
+        } catch (error) {
+            // Error handling isolated from native query parsing
+            chatArea.removeChild(aiTypingIndicator);
+            
+            const errMsg = document.createElement('div');
+            errMsg.className = 'flex items-start gap-2 max-w-[85%]';
+            errMsg.innerHTML = `
+                <div class="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center shrink-0 mt-1">
+                    <span class="material-symbols-outlined text-white text-[12px]">error</span>
+                </div>
+                <div class="bg-red-50 border border-red-200 text-red-700 px-3 py-2.5 rounded-2xl rounded-tl-sm text-sm shadow-sm">
+                    Network error communicating to query engine. Is the backend correctly running?
+                </div>
+            `;
+            chatArea.appendChild(errMsg);
+            console.error("Chat error:", error);
+        }
+        
+        chatArea.scrollTop = chatArea.scrollHeight;
     }
 </script>

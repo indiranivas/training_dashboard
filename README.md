@@ -26,7 +26,7 @@ A fully-dynamic, full-stack **Training Analytics Dashboard** built in Flask. Des
 
 ```text
 ├── app.py                # Main backend configuration, route routing, and Pandas data aggregations
-├── data_.xlsx            # Primary data source (Ensure your export maps to the columns listed below)
+├── data.xlsx             # Primary data source (Ensure your export maps to the columns listed below)
 ├── README.md             # This documentation
 └── templates/            # Frontend Views mapped via Jinja2
     ├── Dashboard.html    # Primary KPI metrics & high-level charts
@@ -39,7 +39,7 @@ A fully-dynamic, full-stack **Training Analytics Dashboard** built in Flask. Des
 
 ## ⚙️ Expected Dataset Layout
 
-Ensure that your `data_.xlsx` document possesses the following structured columns so that the Pandas engine properly reads and filters it:
+Ensure that your `data.xlsx` document possesses the following structured columns so that the Pandas engine properly reads and filters it:
 *   `Emp ID` / `Employee Name`
 *   `Department` / `Business Unit`
 *   `Overall Training Duration (Planned Hrs)`
@@ -59,7 +59,7 @@ Ensure that your `data_.xlsx` document possesses the following structured column
 2. **Install Requirements**:
    Make sure you have Python 3 installed. Then, install the required packages.
    ```bash
-   pip install flask pandas openpyxl
+   pip install -r requirements.txt
    ```
 
 3. **Run the Application Locally**:
@@ -68,6 +68,14 @@ Ensure that your `data_.xlsx` document possesses the following structured column
    python app.py
    ```
    *The server will boot up via `http://127.0.0.1:5000`.*
+
+## 🔐 Environment variables
+
+- **Do not commit `.env`**. Put your key in a local `.env` file:
+
+```bash
+GEMINI_API_KEY=your_key_here
+```
 
 ---
 
