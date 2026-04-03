@@ -64,7 +64,7 @@
                         "on-secondary-fixed-variant": "#005320",
                         "tertiary-fixed-dim": "#fbbc05",
                         "primary-fixed": "#dae2ff",
-                        "primary": "#003d9b",
+                        "primary": "#009ADA",
                         "outline": "#737685",
                         "on-secondary-container": "#00722f",
                         "surface": "#f7f9fc"
@@ -94,17 +94,8 @@
     <!-- SideNavBar (Shared Component) -->
     <aside
         class="h-screen w-64 fixed left-0 top-0 bg-slate-50 dark:bg-slate-950 flex flex-col gap-2 p-4 border-r border-slate-200/50 dark:border-slate-800/50 font-inter text-sm tracking-tight">
-        <div class="mb-8 px-2 flex items-center gap-3">
-            <div
-                class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg overflow-hidden">
-                <img class="w-full h-full object-cover"
-                    data-alt="Abstract geometric logo consisting of interlocking blue triangles representing precision and growth"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAiA9r1--WuZDkZC57D04qUeHBvMPG6eL7y7NbJXhLzidZ2eqiVAZ3sBMi1XO6Lc5bapItZCBIG71PT0vhz2WwPtYDA3_Plox305fd_eSaqMUg6Hbvod4NDbEfoFU9qLh6K5jFuM5C7JKDiEZDzUsOKbIWIMJRgpCoqhgtQJMR2EudBJhzEe3uf11qhUyQ-12RDnVMqbGNxlM2EibQMECt8pv5W1rKa-_RnXEunHC_8Qjum-TEOhtivSLMMdoa9rEb6LYUrdQoaxrp_" />
-            </div>
-            <div>
-                <h1 class="text-xl font-black text-blue-900 dark:text-blue-200 leading-tight">Precision Curator</h1>
-                <p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Enterprise Analytics</p>
-            </div>
+        <div class="mb-8 px-2 flex items-center h-12 text-primary">
+            {% include 'logo.html' %}
         </div>
         <nav class="flex-1 space-y-1">
             <a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:text-blue-700 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all duration-200 ease-in-out rounded-lg"

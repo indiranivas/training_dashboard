@@ -21,7 +21,7 @@
             theme: {
                 extend: {
                     colors: {
-                        "primary": "#003d9b",
+                        "primary": "#009ADA",
                         "secondary": "#006e2c",
                         "tertiary": "#584000",
                         "surface-bright": "#f7f9fc",
@@ -38,9 +38,8 @@
 <body class="bg-background text-slate-800 font-body antialiased">
     <!-- Sidebar Navigation -->
     <aside class="h-screen w-64 fixed left-0 top-0 bg-slate-50 border-r border-slate-200/50 flex flex-col gap-2 p-4 z-50">
-        <div class="mb-8 px-2">
-            <h1 class="text-xl font-black text-blue-900 tracking-tight">Precision Curator</h1>
-            <p class="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold">Enterprise Analytics</p>
+        <div class="mb-8 px-2 flex items-center h-12 text-primary">
+            {% include 'logo.html' %}
         </div>
         <nav class="flex-1 flex flex-col gap-1">
             <a class="flex items-center gap-3 px-4 py-3 text-blue-800 font-bold bg-white rounded-lg shadow-sm" href="/">
