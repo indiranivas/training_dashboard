@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-tertiary-fixed-variant": "#5c4300",
+                        "tertiary-fixed": "#ffdfa0",
+                        "on-primary-fixed-variant": "#0040a2",
+                        "surface-bright": "#f7f9fc",
+                        "inverse-primary": "#b2c5ff",
+                        "inverse-surface": "#2d3133",
+                        "surface-container-highest": "#e0e3e6",
+                        "on-primary-container": "#c4d2ff",
+                        "error-container": "#ffdad6",
+                        "error": "#ba1a1a",
+                        "secondary-container": "#86f898",
+                        "primary-fixed-dim": "#b2c5ff",
+                        "on-surface": "#191c1e",
+                        "on-secondary-fixed": "#002108",
+                        "on-tertiary-container": "#ffcc5c",
+                        "on-primary-fixed": "#001848",
+                        "surface-variant": "#e0e3e6",
+                        "on-secondary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "on-background": "#191c1e",
+                        "surface-container-low": "#f2f4f7",
+                        "secondary": "#006e2c",
+                        "surface-container": "#eceef1",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-high": "#e6e8eb",
+                        "on-surface-variant": "#434654",
+                        "secondary-fixed-dim": "#6ddd81",
+                        "surface-tint": "#0c56d0",
+                        "secondary-fixed": "#89fa9b",
+                        "surface-dim": "#d8dadd",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed": "#261a00",
+                        "on-tertiary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#755600",
+                        "primary-container": "#0052cc",
+                        "inverse-on-surface": "#eff1f4",
+                        "background": "#f7f9fc",
+                        "tertiary": "#584000",
+                        "outline-variant": "#c3c6d6",
+                        "on-secondary-fixed-variant": "#005320",
+                        "tertiary-fixed-dim": "#fbbc05",
+                        "primary-fixed": "#dae2ff",
+                        "primary": "#003d9b",
+                        "outline": "#737685",
+                        "on-secondary-container": "#00722f",
+                        "surface": "#f7f9fc"
+                    },
+                    fontFamily: {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+
+<body class="bg-background font-body text-on-surface antialiased">
+    <!-- SideNavBar (Shared Component) -->
+    <aside
+        class="h-screen w-64 fixed left-0 top-0 bg-slate-50 dark:bg-slate-950 flex flex-col gap-2 p-4 border-r border-slate-200/50 dark:border-slate-800/50 font-inter text-sm tracking-tight">
+        <div class="mb-8 px-2 flex flex-col gap-1">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center">
+                    <span class="material-symbols-outlined text-white"
+                        style="font-variation-settings: 'FILL' 1;">precision_manufacturing</span>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black text-blue-900 dark:text-blue-200 tracking-tighter">Precision Curator
+                    </h1>
+                    <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Enterprise Analytics</p>
+                </div>
+            </div>
+        </div>
+        <nav class="flex-1 space-y-1">
+            <a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:text-blue-700 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all duration-200 ease-in-out rounded-lg"
+                href="/">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span>Dashboard</span>
+            </a>
+            <!-- Active State: Employees -->
+            <a class="flex items-center gap-3 px-3 py-2 text-blue-800 dark:text-blue-300 font-bold bg-white dark:bg-slate-800 rounded-lg shadow-sm transition-all duration-200 ease-in-out"
+                href="/employees">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">groups</span>
+                <span>Employees</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:text-blue-700 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all duration-200 ease-in-out rounded-lg"
+                href="/analytics">
+                <span class="material-symbols-outlined">assessment</span>
+                <span>Reports</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:text-blue-700 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all duration-200 ease-in-out rounded-lg"
+                href="/settings">
+                <span class="material-symbols-outlined">settings</span>
+                <span>Settings</span>
+            </a>
+        </nav>
+        <div class="mt-auto p-2">
+            <button
+                class="w-full bg-gradient-to-br from-primary to-primary-container text-white py-3 rounded-xl font-semibold shadow-lg shadow-primary/20 flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all">
+                <span class="material-symbols-outlined text-[20px]">insights</span>
+                Generate Insight
+            </button>
+        </div>
+    </aside>
+    <main class="ml-64 min-h-screen">
+        <!-- TopNavBar (Shared Component) -->
+        <header
+            class="w-full top-0 sticky z-40 bg-[#f7f9fc] dark:bg-slate-900 border-b border-slate-200/50 dark:border-slate-800/50 flex justify-between items-center px-8 h-16">
+            <h2 class="text-lg font-bold text-slate-900 dark:text-white font-inter">Employees Directory</h2>
+            <div class="flex items-center gap-6">
+                <div class="relative group">
+                    <span
+                        class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+                    <input
+                        class="bg-surface-container-low border-none rounded-full pl-10 pr-4 py-2 text-sm w-64 focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
+                        placeholder="Global search..." type="text" />
+                </div>
+                <div class="flex items-center gap-2 text-slate-500">
+                    <button
+                        class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors cursor-pointer">
+                        <span class="material-symbols-outlined">notifications</span>
+                    </button>
+                    <button
+                        class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors cursor-pointer">
+                        <span class="material-symbols-outlined">help</span>
+                    </button>
+                    <div class="h-8 w-[1px] bg-slate-200 mx-2"></div>
+                    <img alt="User profile" class="w-8 h-8 rounded-full border border-slate-200"
+                        data-alt="professional headshot of a middle-aged male executive in a grey suit, soft studio lighting, clean background"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxXXhvpYX7GGuezA3od4lpKprIm0tRGMFCze8jndViF46vxkFSAnqXUf1dnzZP1tKFBTddgnMxJ-s109DuAtyaTDuxq9G2yB4gNmmdqWslF50UIeEro500pAPNHr0Ph71DAxvMuLF2QC--IMwxdohJze_npuXcNPgi33PnxjDunx0nR_g8wCYcuyZ1EMXg4u3vOvlqIuNBj5265o7GDCR1FwQKkNKH3Cwxyfwt5pb5fxrhrFVR5HQhq772i4rkmL8MLbprC8EI9goo" />
+                </div>
+            </div>
+        </header>
+        <!-- Content Area -->
+        <div class="p-8 space-y-8">
+            <!-- Header & Primary Actions -->
+            <div class="flex justify-between items-end">
+                <div class="space-y-1">
+                    <h3 class="text-3xl font-headline font-extrabold text-on-surface tracking-tight">Talent Ecosystem
+                    </h3>
+                    <p class="text-on-surface-variant text-sm">Managing {{ all_count }} employees across {{ business_units|length }} business units.</p>
+                </div>
+                <button
+                    class="bg-primary text-white px-6 py-2.5 rounded-lg font-semibold flex items-center gap-2 shadow-md hover:bg-primary-container active:scale-[0.98] transition-all">
+                    <span class="material-symbols-outlined">person_add</span>
+                    Add Employee
+                </button>
+            </div>
+            <!-- Filters Section - Bento Style -->
+            <div class="grid grid-cols-12 gap-4">
+                <div
+                    class="col-span-12 lg:col-span-8 bg-surface-container-low p-1.5 rounded-xl flex gap-2 overflow-x-auto">
+                    <button
+                        class="bg-surface-container-lowest px-4 py-2 rounded-lg text-sm font-bold text-primary shadow-sm whitespace-nowrap">All
+                        Employees</button>
+                    <button
+                        class="px-4 py-2 rounded-lg text-sm font-medium text-on-surface-variant hover:bg-surface-container-highest transition-colors whitespace-nowrap">Engineering</button>
+                    <button
+                        class="px-4 py-2 rounded-lg text-sm font-medium text-on-surface-variant hover:bg-surface-container-highest transition-colors whitespace-nowrap">Product
+                        Management</button>
+                    <button
+                        class="px-4 py-2 rounded-lg text-sm font-medium text-on-surface-variant hover:bg-surface-container-highest transition-colors whitespace-nowrap">Data
+                        Science</button>
+                    <button
+                        class="px-4 py-2 rounded-lg text-sm font-medium text-on-surface-variant hover:bg-surface-container-highest transition-colors whitespace-nowrap">Corporate
+                        Strategy</button>
+                </div>
+                <form method="GET" action="/employees" class="col-span-12 lg:col-span-4 flex gap-4">
+                    <div class="relative flex-1">
+                        <select name="business_unit" onchange="this.form.submit()"
+                            class="w-full bg-surface-container-low border-none rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary/10 py-3 px-4 appearance-none">
+                            <option value="All" {% if bu_filter == 'All' %}selected{% endif %}>Business Unit: All</option>
+                            {% for b in business_units %}
+                            <option value="{{ b }}" {% if bu_filter == b %}selected{% endif %}>{{ b }}</option>
+                            {% endfor %}
+                        </select>
+                        <span
+                            class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">filter_list</span>
+                    </div>
+                    <div class="relative flex-1">
+                        <select name="department" onchange="this.form.submit()"
+                            class="w-full bg-surface-container-low border-none rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary/10 py-3 px-4 appearance-none">
+                            <option value="All" {% if dept_filter == 'All' %}selected{% endif %}>Department: All</option>
+                            {% for d in departments %}
+                            <option value="{{ d }}" {% if dept_filter == d %}selected{% endif %}>{{ d }}</option>
+                            {% endfor %}
+                        </select>
+                        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">domain</span>
+                    </div>
+                </form>
+            </div>
+            <!-- Employee List Table - Card Based -->
+            <div
+                class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden ring-1 ring-outline-variant/10">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-surface-container-low/50">
+                            <th
+                                class="px-6 py-4 text-[11px] font-bold uppercase tracking-[0.1em] text-on-surface-variant">
+                                Employee Details</th>
+                            <th
+                                class="px-6 py-4 text-[11px] font-bold uppercase tracking-[0.1em] text-on-surface-variant">
+                                Department / Unit</th>
+                            <th
+                                class="px-6 py-4 text-[11px] font-bold uppercase tracking-[0.1em] text-on-surface-variant">
+                                Training Health</th>
+                            <th
+                                class="px-6 py-4 text-[11px] font-bold uppercase tracking-[0.1em] text-on-surface-variant">
+                                Certifications</th>
+                            <th
+                                class="px-6 py-4 text-[11px] font-bold uppercase tracking-[0.1em] text-on-surface-variant text-right">
+                                Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-outline-variant/10">
+                        {% for row in records %}
+                        <tr class="hover:bg-surface-container-low/30 transition-colors">
+                            <td class="px-6 py-5">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold font-headline select-none">{{ row['Employee Name'][0] if row['Employee Name'] else '?' }}</div>
+                                    <div>
+                                        <p class="font-bold text-on-surface text-base">{{ row['Employee Name'] }}</p>
+                                        <p class="text-on-surface-variant text-xs">#{{ row['Emp ID'] }}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-5">
+                                <p class="text-sm font-semibold text-on-surface">{{ row['Department'] }}</p>
+                                <p class="text-xs text-on-surface-variant">{{ row['Business Unit'] }}</p>
+                            </td>
+                            <td class="px-6 py-5">
+                                <div class="space-y-1.5 w-32">
+                                    <div class="flex justify-between items-center text-[10px] font-bold text-on-surface-variant">
+                                        <span>TRAINING</span>
+                                        <span class="{% if row['Completed_20hrs'] %}text-secondary{% else %}text-error{% endif %}">
+                                            {% if row['Completed_20hrs'] %}Completed{% else %}Pending{% endif %}
+                                        </span>
+                                    </div>
+                                    <div class="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden">
+                                        <div class="h-full {% if row['Completed_20hrs'] %}bg-secondary w-full{% else %}bg-error w-[20%]{% endif %} rounded-full"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-5">
+                                <div class="flex gap-1.5 flex-wrap w-40">
+                                    <span class="px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[10px] font-black rounded-full uppercase truncate max-w-full">{{ row['Training_Count'] }} Course(s)</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-5 text-right">
+                                <span class="text-primary font-bold text-sm bg-primary/10 px-3 py-1.5 rounded-lg whitespace-nowrap">{{ "%.1f"|format(row['Total_Hours']|float) }} Hrs</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <!-- Pagination / Footer -->
+                <div
+                    class="px-6 py-4 bg-surface-container-low/30 flex items-center justify-between border-t border-outline-variant/10">
+                    <p class="text-xs text-on-surface-variant font-medium">Showing {{ records|length }} of {{ filtered_count }} entries (Total: {{ all_count }})</p>
+                    <div class="flex gap-2">
+                        {% set prev_page = page - 1 if page > 1 else 1 %}
+                        <a href="?page={{ prev_page }}&department={{ dept_filter }}&business_unit={{ bu_filter }}"
+                            class="p-2 border border-outline-variant/20 rounded-lg transition-colors {% if page == 1 %}bg-surface-container-lowest opacity-30 cursor-not-allowed pointer-events-none{% else %}bg-surface-container-lowest hover:bg-surface-container-high{% endif %}">
+                            <span class="material-symbols-outlined text-sm">chevron_left</span>
+                        </a>
+
+                        {% set start_p = page - 1 if page > 1 else 1 %}
+                        {% set end_p = start_p + 2 %}
+                        {% if end_p > total_pages %}{% set end_p = total_pages %}{% endif %}
+                        {% if end_p - start_p < 2 and total_pages >= 3 %}{% set start_p = end_p - 2 %}{% endif %}
+
+                        {% for p in range(start_p, end_p + 1) %}
+                            {% if p == page %}
+                                <span class="px-4 py-1.5 bg-primary text-white rounded-lg text-xs font-bold">{{ p }}</span>
+                            {% else %}
+                                <a href="?page={{ p }}&department={{ dept_filter }}&business_unit={{ bu_filter }}"
+                                    class="px-4 py-1.5 bg-surface-container-lowest border border-outline-variant/20 rounded-lg text-xs font-medium hover:bg-surface-container-high transition-colors">{{ p }}</a>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% set next_page = page + 1 if page < total_pages else total_pages %}
+                        <a href="?page={{ next_page }}&department={{ dept_filter }}&business_unit={{ bu_filter }}"
+                            class="p-2 border border-outline-variant/20 rounded-lg transition-colors {% if page == total_pages or total_pages == 0 %}bg-surface-container-lowest opacity-30 cursor-not-allowed pointer-events-none{% else %}bg-surface-container-lowest hover:bg-surface-container-high{% endif %}">
+                            <span class="material-symbols-outlined text-sm">chevron_right</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <!-- AI Insight Section - Signature Glass Component -->
+            <div
+                class="glass-card p-6 rounded-2xl border border-white/40 shadow-xl shadow-primary/5 flex items-start gap-6">
+                <div class="w-12 h-12 rounded-2xl bg-secondary/10 flex items-center justify-center flex-shrink-0">
+                    <span class="material-symbols-outlined text-secondary"
+                        style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex items-center gap-2">
+                        <h4 class="text-lg font-extrabold text-on-surface leading-none">Curation Insight</h4>
+                        <span
+                            class="px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[10px] font-black rounded-full uppercase">Live
+                            Update</span>
+                    </div>
+                    <p class="text-sm text-on-surface-variant leading-relaxed">
+                        Data Science teams have shown a <span class="font-bold text-secondary">24% increase</span> in
+                        certifications over the last quarter. However, "Core Infrastructure" unit currently has 14
+                        employees with expiring cloud credentials in the next 30 days. Recommend triggering automated
+                        renewal reminders.
+                    </p>
+                    <div class="flex gap-4">
+                        <button class="text-primary font-bold text-xs hover:opacity-80 flex items-center gap-1">
+                            Review Compliance Queue <span class="material-symbols-outlined text-sm">open_in_new</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>

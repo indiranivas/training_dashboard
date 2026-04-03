@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Settings | Training Analytics Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-tertiary-fixed-variant": "#5c4300",
+                        "tertiary-fixed": "#ffdfa0",
+                        "on-primary-fixed-variant": "#0040a2",
+                        "surface-bright": "#f7f9fc",
+                        "inverse-primary": "#b2c5ff",
+                        "inverse-surface": "#2d3133",
+                        "surface-container-highest": "#e0e3e6",
+                        "on-primary-container": "#c4d2ff",
+                        "error-container": "#ffdad6",
+                        "error": "#ba1a1a",
+                        "secondary-container": "#86f898",
+                        "primary-fixed-dim": "#b2c5ff",
+                        "on-surface": "#191c1e",
+                        "on-secondary-fixed": "#002108",
+                        "on-tertiary-container": "#ffcc5c",
+                        "on-primary-fixed": "#001848",
+                        "surface-variant": "#e0e3e6",
+                        "on-secondary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "on-background": "#191c1e",
+                        "surface-container-low": "#f2f4f7",
+                        "secondary": "#006e2c",
+                        "surface-container": "#eceef1",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-high": "#e6e8eb",
+                        "on-surface-variant": "#434654",
+                        "secondary-fixed-dim": "#6ddd81",
+                        "surface-tint": "#0c56d0",
+                        "secondary-fixed": "#89fa9b",
+                        "surface-dim": "#d8dadd",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed": "#261a00",
+                        "on-tertiary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "tertiary-container": "#755600",
+                        "primary-container": "#0052cc",
+                        "inverse-on-surface": "#eff1f4",
+                        "background": "#f7f9fc",
+                        "tertiary": "#584000",
+                        "outline-variant": "#c3c6d6",
+                        "on-secondary-fixed-variant": "#005320",
+                        "tertiary-fixed-dim": "#fbbc05",
+                        "primary-fixed": "#dae2ff",
+                        "primary": "#003d9b",
+                        "outline": "#737685",
+                        "on-secondary-container": "#00722f",
+                        "surface": "#f7f9fc"
+                    },
+                    fontFamily: {
+                        "headline": ["Inter"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-background text-on-surface">
+    <!-- SideNavBar (Shared Component) -->
+    <aside
+        class="h-screen w-64 fixed left-0 top-0 bg-slate-50 dark:bg-slate-950 flex flex-col gap-2 p-4 border-r border-slate-200/50 dark:border-slate-800/50 font-inter text-sm tracking-tight">
+        <div class="mb-8 px-2 flex items-center gap-3">
+            <div
+                class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white shadow-lg overflow-hidden">
+                <img class="w-full h-full object-cover"
+                    data-alt="Abstract geometric logo consisting of interlocking blue triangles representing precision and growth"
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuAiA9r1--WuZDkZC57D04qUeHBvMPG6eL7y7NbJXhLzidZ2eqiVAZ3sBMi1XO6Lc5bapItZCBIG71PT0vhz2WwPtYDA3_Plox305fd_eSaqMUg6Hbvod4NDbEfoFU9qLh6K5jFuM5C7JKDiEZDzUsOKbIWIMJRgpCoqhgtQJMR2EudBJhzEe3uf11qhUyQ-12RDnVMqbGNxlM2EibQMECt8pv5W1rKa-_RnXEunHC_8Qjum-TEOhtivSLMMdoa9rEb6LYUrdQoaxrp_" />
+            </div>
+            <div>
+                <h1 class="text-xl font-black text-blue-900 dark:text-blue-200 leading-tight">Precision Curator</h1>
+                <p class="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Enterprise Analytics</p>
+            </div>
+        </div>
+        <nav class="flex-1 space-y-1">
+            <a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:text-blue-700 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all duration-200 ease-in-out rounded-lg"
+                href="/">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span>Dashboard</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:text-blue-700 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all duration-200 ease-in-out rounded-lg"
+                href="/employees">
+                <span class="material-symbols-outlined">groups</span>
+                <span>Employees</span>
+            </a>
+            <a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:text-blue-700 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all duration-200 ease-in-out rounded-lg"
+                href="/analytics">
+                <span class="material-symbols-outlined">assessment</span>
+                <span>Reports</span>
+            </a>
+            <!-- Active State: Settings -->
+            <a class="flex items-center gap-3 px-3 py-2 text-blue-800 dark:text-blue-300 font-bold bg-white dark:bg-slate-800 rounded-lg shadow-sm transition-all duration-200 ease-in-out"
+                href="/settings">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings</span>
+                <span>Settings</span>
+            </a>
+        </nav>
+        <div class="mt-auto pt-4 border-t border-slate-200/50">
+            <button
+                class="w-full py-3 px-4 rounded-xl bg-gradient-to-br from-primary to-primary-container text-white font-semibold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all active:opacity-80">
+                <span class="material-symbols-outlined text-sm" data-icon="auto_awesome">auto_awesome</span>
+                Generate Insight
+            </button>
+        </div>
+    </aside>
+    <!-- Main Content Canvas -->
+    <main class="ml-64 min-h-screen">
+        <!-- TopNavBar (Shared Component) -->
+        <header
+            class="w-full top-0 sticky z-30 bg-[#f7f9fc] dark:bg-slate-900 flex justify-between items-center px-6 h-16 w-full border-b border-slate-200/50 dark:border-slate-800/50 font-inter antialiased text-sm">
+            <div class="flex items-center gap-4">
+                <h2 class="text-lg font-bold text-slate-900 dark:text-white">Settings</h2>
+                <div class="h-4 w-[1px] bg-slate-300"></div>
+                <span class="text-slate-500">System Configuration</span>
+            </div>
+            <div class="flex items-center gap-6">
+                <div class="relative group">
+                    <span
+                        class="material-symbols-outlined text-slate-500 cursor-pointer hover:bg-slate-100 p-2 rounded-full transition-colors"
+                        data-icon="notifications">notifications</span>
+                    <span
+                        class="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full border-2 border-[#f7f9fc]"></span>
+                </div>
+                <span
+                    class="material-symbols-outlined text-slate-500 cursor-pointer hover:bg-slate-100 p-2 rounded-full transition-colors"
+                    data-icon="help">help</span>
+                <div class="flex items-center gap-3 pl-4 border-l border-slate-200/50">
+                    <img class="w-8 h-8 rounded-full border-2 border-white shadow-sm"
+                        data-alt="Professional headshot of a mature executive with spectacles, soft studio lighting, clean background"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDr73MFsSc65zf2_hJUA6wj8LGTNJmx_PY_85FGwxUqRdasPuhFQoFxJ2BHu1ciwYkkQMji2KefLjs8b-MXKDfsEDEW9ZhBYv8D_9LOeBU97q6ubygbabxPljxAPMivuiFy3tGUyzhC6a-6exFdLmssxQRnvvPUW1ZZGROWWXzhkNa36g0qpvmYbdrzzMm4LYoto7CqO5p580iEvBFX3VVSd1aTeyvlJIY0hXBtQunzZbREOWHWeNbW4ntZ_Zc8Ock1nQKl1qFGm7sY" />
+                    <span class="font-medium text-slate-700">Julian Casablancas</span>
+                </div>
+            </div>
+        </header>
+        <!-- Settings Content Grid -->
+        <div class="p-10 max-w-6xl mx-auto space-y-10">
+            <!-- Bento Grid Section: User & Preferences -->
+            <section class="grid grid-cols-12 gap-6">
+                <!-- User Profile Card -->
+                <div class="col-span-12 lg:col-span-7 bg-surface-container-lowest rounded-xl p-8 shadow-sm">
+                    <div class="flex justify-between items-start mb-8">
+                        <div>
+                            <h3 class="text-xl font-bold text-on-surface mb-1">User Profile</h3>
+                            <p class="text-sm text-on-surface-variant">Manage your personal identification and contact
+                                details.</p>
+                        </div>
+                        <div
+                            class="flex items-center gap-2 text-secondary font-medium text-xs bg-secondary-container/20 px-3 py-1 rounded-full">
+                        <!-- Analytics Database Component -->
+                        <div
+                            class="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/10 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex gap-6 group hover:border-primary/20 transition-colors">
+                            <div
+                                class="w-16 h-16 bg-surface-container-low rounded-xl flex items-center justify-center flex-shrink-0 relative overflow-hidden">
+                                <div
+                                    class="absolute inset-0 bg-gradient-to-br from-secondary/10 to-transparent group-hover:opacity-100 transition-opacity">
+                                </div>
+                                <span class="material-symbols-outlined text-secondary text-3xl relative z-10"
+                                    style="font-variation-settings: 'FILL' 1;">schema</span>
+                            </div>
+                            <div class="flex-1 flex flex-col justify-center">
+                                <div class="flex justify-between items-start mb-1">
+                                    <h5 class="text-base font-bold text-on-surface">System Data Lake</h5>
+                                    <span
+                                        class="px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[10px] font-bold rounded-md flex items-center gap-1"><span
+                                            class="w-1.5 h-1.5 bg-secondary rounded-full animate-pulse"></span>ACTIVE</span>
+                                </div>
+                                <p class="text-xs text-on-surface-variant mb-3">
+                                    Currently tracking <span class="font-bold text-slate-800">{{ row_count }} records</span> natively mapping <span class="font-bold text-slate-800">{{ col_count }} dimensions</span>.
+                                </p>
+                                <div class="flex gap-1.5 flex-wrap">
+                                    {% for col in columns[:8] %}
+                                    <span class="bg-surface-container text-[10px] font-bold px-2 py-0.5 rounded text-on-surface-variant whitespace-nowrap">{{ col }}</span>
+                                    {% endfor %}
+                                    {% if columns|length > 8 %}
+                                    <span class="bg-surface-container text-[10px] font-bold px-2 py-0.5 rounded text-on-surface-variant whitespace-nowrap">+ {{ columns|length - 8 }} more</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>check_circle</span>
+                            Changes Saved
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-8 mb-10">
+                        <div class="relative group">
+                            <img class="w-24 h-24 rounded-2xl object-cover ring-4 ring-surface-container-low shadow-sm"
+                                data-alt="High quality portrait of male user, bright lighting, professional attire, soft bokeh background"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqEDbq3FLjI6dPTxTitSR6cgCZE2lpsTluocvkqd2yKWP7ly6JlX7mBZawjv3FuKRLoe3D80JArSd7yE1ZNY4PgTn08zA1aekUuMj3L7hB2iGwFMjh3o0KShjtzLlxZZeopluBKZlqFCCydRtZyWl_C-hZk5U34wz1wwXb4DqUMfa5oCuaTnJuIxN6GWQomlJ1QXMgypbD7M7JfbbL8FsPeLVaTrLsOOfvdUpWTY7vzGei5YvPrtIvpHJm--spJ7Pi8j0HAoDpBzmn" />
+                            <button
+                                class="absolute -bottom-2 -right-2 bg-primary text-white p-2 rounded-lg shadow-lg hover:scale-110 transition-transform">
+                                <span class="material-symbols-outlined text-sm" data-icon="edit">edit</span>
+                            </button>
+                        </div>
+                        <div class="space-y-1">
+                            <h4 class="text-lg font-bold">Julian Casablancas</h4>
+                            <p class="text-on-surface-variant text-sm">Senior Analytics Director</p>
+                            <div class="flex gap-2 mt-3">
+                                <span
+                                    class="px-2 py-1 bg-surface-container-high rounded text-[10px] font-bold tracking-wider uppercase text-on-surface-variant">Admin
+                                    Access</span>
+                                <span
+                                    class="px-2 py-1 bg-surface-container-high rounded text-[10px] font-bold tracking-wider uppercase text-on-surface-variant">Verified</span>
+                            </div>
+                        </div>
+                    </div>
+                    <form class="grid grid-cols-2 gap-6">
+                        <div class="col-span-2 md:col-span-1">
+                            <label
+                                class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Display
+                                Name</label>
+                            <input
+                                class="w-full bg-surface-container-low border-none rounded-lg px-4 py-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
+                                type="text" value="Julian Casablancas" />
+                        </div>
+                        <div class="col-span-2 md:col-span-1">
+                            <label
+                                class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Email
+                                Address</label>
+                            <input
+                                class="w-full bg-surface-container-low border-none rounded-lg px-4 py-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
+                                type="email" value="julian.c@precisioncurator.ai" />
+                        </div>
+                        <div class="col-span-2">
+                            <label
+                                class="block text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">Bio
+                                / Professional Summary</label>
+                            <textarea
+                                class="w-full bg-surface-container-low border-none rounded-lg px-4 py-3 text-sm focus:ring-1 focus:ring-primary/20 focus:bg-surface-container-lowest transition-all"
+                                rows="3">Overseeing the predictive modeling initiatives for the enterprise human resources division.</textarea>
+                        </div>
+                    </form>
+                </div>
+                <!-- System Preferences -->
+                <div class="col-span-12 lg:col-span-5 flex flex-col gap-6">
+                    <div class="bg-surface-container-lowest rounded-xl p-8 shadow-sm flex-1">
+                        <h3 class="text-xl font-bold text-on-surface mb-6">System Preferences</h3>
+                        <div class="space-y-6">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-primary">
+                                        <span class="material-symbols-outlined" data-icon="dark_mode">dark_mode</span>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-sm">Appearance</p>
+                                        <p class="text-xs text-on-surface-variant">Switch to dark interface</p>
+                                    </div>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input class="sr-only peer" type="checkbox" />
+                                    <div
+                                        class="w-11 h-6 bg-surface-container-highest rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-primary">
+                                        <span class="material-symbols-outlined" data-icon="translate">translate</span>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-sm">System Language</p>
+                                        <p class="text-xs text-on-surface-variant">English (US)</p>
+                                    </div>
+                                </div>
+                                <span class="material-symbols-outlined text-on-surface-variant cursor-pointer"
+                                    data-icon="chevron_right">chevron_right</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-primary">
+                                        <span class="material-symbols-outlined"
+                                            data-icon="notifications_active">notifications_active</span>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-sm">Notification Push</p>
+                                        <p class="text-xs text-on-surface-variant">Alerts for anomalies</p>
+                                    </div>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input checked="" class="sr-only peer" type="checkbox" />
+                                    <div
+                                        class="w-11 h-6 bg-surface-container-highest rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary">
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-primary p-8 rounded-xl text-white shadow-lg overflow-hidden relative">
+                        <div class="relative z-10">
+                            <h3 class="text-lg font-bold mb-2">Export Data</h3>
+                            <p class="text-sm text-blue-100/80 mb-6">Download your complete activity log and custom
+                                insights in JSON format.</p>
+                            <button
+                                class="px-6 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-lg font-bold text-sm transition-colors border border-white/20">
+                                Start Export
+                            </button>
+                        </div>
+                        <span class="material-symbols-outlined absolute -bottom-6 -right-6 text-9xl text-white/5"
+                            data-icon="download">download</span>
+                    </div>
+                </div>
+            </section>
+            <!-- Admin Controls Section -->
+            <section class="bg-surface-container-low rounded-2xl p-2">
+                <div class="bg-surface-container-lowest rounded-xl p-8 shadow-sm">
+                    <div class="mb-10">
+                        <h3 class="text-2xl font-black text-on-surface flex items-center gap-3">
+                            <span class="material-symbols-outlined text-primary" data-icon="admin_panel_settings"
+                                style="font-variation-settings: 'opsz' 48;">admin_panel_settings</span>
+                            Admin Controls
+                        </h3>
+                        <p class="text-on-surface-variant mt-1">Advanced management for organizational resources and
+                            security.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <!-- Role Management -->
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <h4 class="font-bold text-on-surface">Organizational Roles</h4>
+                                <button
+                                    class="text-primary text-xs font-bold uppercase tracking-wider hover:underline">Manage
+                                    All</button>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between p-4 bg-surface-container-low rounded-xl">
+                                    <div class="flex items-center gap-3">
+                                        <div
+                                            class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700">
+                                            <span class="material-symbols-outlined text-sm"
+                                                data-icon="shield">shield</span>
+                                        </div>
+                                        <span class="text-sm font-semibold">Administrator</span>
+                                    </div>
+                                    <span class="text-xs font-bold text-on-surface-variant">4 Active</span>
+                                </div>
+                                <div class="flex items-center justify-between p-4 bg-surface-container-low rounded-xl">
+                                    <div class="flex items-center gap-3">
+                                        <div
+                                            class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700">
+                                            <span class="material-symbols-outlined text-sm"
+                                                data-icon="analytics">analytics</span>
+                                        </div>
+                                        <span class="text-sm font-semibold">Data Curator</span>
+                                    </div>
+                                    <span class="text-xs font-bold text-on-surface-variant">12 Active</span>
+                                </div>
+                                <div class="flex items-center justify-between p-4 bg-surface-container-low rounded-xl">
+                                    <div class="flex items-center gap-3">
+                                        <div
+                                            class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-700">
+                                            <span class="material-symbols-outlined text-sm"
+                                                data-icon="visibility">visibility</span>
+                                        </div>
+                                        <span class="text-sm font-semibold">Viewer</span>
+                                    </div>
+                                    <span class="text-xs font-bold text-on-surface-variant">88 Active</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Security & Keys -->
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <h4 class="font-bold text-on-surface">API &amp; Connectivity</h4>
+                                <button
+                                    class="text-primary text-xs font-bold uppercase tracking-wider hover:underline">+
+                                    New Key</button>
+                            </div>
+                            <div class="bg-surface-container-low rounded-xl p-6">
+                                <div class="mb-6">
+                                    <label
+                                        class="block text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">Live
+                                        Production Key</label>
+                                    <div class="flex items-center gap-2">
+                                        <input
+                                            class="flex-1 bg-surface-container-lowest border-none rounded-lg px-4 py-2 text-xs font-mono"
+                                            readonly="" type="password" value="pk_live_51MszHkL5s9kL..." />
+                                        <button
+                                            class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+                                            <span class="material-symbols-outlined text-lg"
+                                                data-icon="content_copy">content_copy</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label
+                                        class="block text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-3">Webhooks
+                                        Status</label>
+                                    <div
+                                        class="flex items-center justify-between bg-surface-container-lowest rounded-lg px-4 py-3">
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+                                            <span class="text-xs font-medium">8 Endpoints Active</span>
+                                        </div>
+                                        <span class="material-symbols-outlined text-sm text-on-surface-variant"
+                                            data-icon="settings_input_component">settings_input_component</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <!-- Sticky Bottom Save Bar (Contextual Action) -->
+        <div class="fixed bottom-8 right-8 z-50 flex items-center gap-4">
+            <div
+                class="bg-surface-container-lowest/80 backdrop-blur-md px-6 py-4 rounded-2xl shadow-2xl border border-outline-variant/10 flex items-center gap-6">
+                <div class="flex -space-x-2">
+                    <div
+                        class="w-8 h-8 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-xs" data-icon="cloud_done">cloud_done</span>
+                    </div>
+                </div>
+                <p class="text-xs font-medium text-on-surface-variant">All changes auto-saved to cloud</p>
+                <div class="h-6 w-[1px] bg-outline-variant/30"></div>
+                <button
+                    class="bg-gradient-to-br from-primary to-primary-container text-white px-8 py-3 rounded-full font-bold text-sm shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
+                    Publish Changes
+                </button>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>

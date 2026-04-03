@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Training Analytics Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f7f9fc; }
+        ::-webkit-scrollbar-thumb { background: #c3c6d6; border-radius: 10px; }
+    </style>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#003d9b",
+                        "secondary": "#006e2c",
+                        "tertiary": "#584000",
+                        "surface-bright": "#f7f9fc",
+                        "background": "#f7f9fc",
+                        "surface-container-lowest": "#ffffff"
+                    },
+                    fontFamily: { "body": ["Inter"] },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-slate-800 font-body antialiased">
+    <!-- Sidebar Navigation -->
+    <aside class="h-screen w-64 fixed left-0 top-0 bg-slate-50 border-r border-slate-200/50 flex flex-col gap-2 p-4 z-50">
+        <div class="mb-8 px-2">
+            <h1 class="text-xl font-black text-blue-900 tracking-tight">Precision Curator</h1>
+            <p class="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold">Enterprise Analytics</p>
+        </div>
+        <nav class="flex-1 flex flex-col gap-1">
+            <a class="flex items-center gap-3 px-4 py-3 text-blue-800 font-bold bg-white rounded-lg shadow-sm" href="/">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span>Dashboard</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:text-blue-700 hover:bg-slate-200/50 rounded-lg transition-all" href="/employees">
+                <span class="material-symbols-outlined">groups</span>
+                <span>Employees</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:text-blue-700 hover:bg-slate-200/50 rounded-lg transition-all" href="/analytics">
+                <span class="material-symbols-outlined">assessment</span>
+                <span>Reports</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 text-slate-600 hover:text-blue-700 hover:bg-slate-200/50 rounded-lg transition-all" href="/settings">
+                <span class="material-symbols-outlined">settings</span>
+                <span>Settings</span>
+            </a>
+        </nav>
+        <div class="mt-auto p-2">
+            <button class="w-full py-3 px-4 bg-gradient-to-br from-primary to-blue-600 text-white rounded-xl font-semibold text-sm shadow-lg hover:opacity-90 transition-all flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-sm">auto_awesome</span>
+                Generate Insight
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="ml-64 min-h-screen">
+        <!-- Top Navigation -->
+        <header class="w-full top-0 sticky z-40 bg-[#f7f9fc] flex justify-between items-center px-8 h-16 border-b border-slate-200/50">
+            <h2 class="text-lg font-bold text-slate-900">Training Analytics Dashboard</h2>
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-3">
+                    <button class="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors relative">
+                        <span class="material-symbols-outlined">notifications</span>
+                    </button>
+                    <div class="h-8 w-8 rounded-full bg-slate-200 overflow-hidden ml-2 border border-slate-300">
+                        <img src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEubytoVDl_ez3CAkM2jlQrKxZQmxk_6hZcFZeI4ZewA8sNKn_xDYhP3otawwXNxQAIPQ85l5_zJaS79jK-2XK697zGIskSGpN8FxzLXdUtnKvRKChDZ5zIQtbgl41nveUz1jq51aUW1EHpSe2eyjeHW9UonDEU44GpUc9R_3dx5AdSuV4jpNjkVKwoaILMvy2FSSs3d9nT0uq_A2VxTV_EAVMOQTSQNrXOyET3TkrHsUktnwCj_ftqcthzG8Aeaaucj6W0D31HunB" alt="User profile" />
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="p-8 space-y-10">
+            <!-- Filters -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                    <h3 class="text-2xl font-extrabold tracking-tight text-slate-900">Overview Performance</h3>
+                    <p class="text-slate-500 text-sm mt-1">Real-time learning metrics across all business units.</p>
+                </div>
+                <form method="GET" action="/" class="flex items-center gap-3">
+                    <select name="department" onchange="this.form.submit()" class="bg-surface-container-low border border-slate-200 rounded-lg text-sm px-4 py-2.5 focus:ring-2 focus:ring-primary/10 font-medium text-slate-700">
+                        <option value="All" {% if dept_filter == 'All' %}selected{% endif %}>All Departments</option>
+                        {% for d in departments %}
+                        <option value="{{ d }}" {% if dept_filter == d %}selected{% endif %}>{{ d }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="business_unit" onchange="this.form.submit()" class="bg-surface-container-low border border-slate-200 rounded-lg text-sm px-4 py-2.5 focus:ring-2 focus:ring-primary/10 font-medium text-slate-700">
+                        <option value="All" {% if bu_filter == 'All' %}selected{% endif %}>All Business Units</option>
+                        {% for b in business_units %}
+                        <option value="{{ b }}" {% if bu_filter == b %}selected{% endif %}>{{ b }}</option>
+                        {% endfor %}
+                    </select>
+                    <a href="/" class="px-4 py-2 text-sm text-blue-600 hover:text-blue-800 font-bold underline">Clear Filters</a>
+                </form>
+            </div>
+
+            <!-- KPI Row -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- KPI 1 -->
+                <div class="bg-white p-6 rounded-xl border border-slate-100 flex flex-col justify-between h-32 relative overflow-hidden group">
+                    <div class="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-all"></div>
+                    <div class="flex justify-between items-start">
+                        <span class="text-slate-500 text-[11px] font-bold uppercase tracking-wider">Learning Coverage</span>
+                        <span class="material-symbols-outlined text-primary">analytics</span>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-3xl font-black">{{ "%.1f"|format(metrics.coverage) }}%</span>
+                    </div>
+                </div>
+                <!-- KPI 2 -->
+                <div class="bg-white p-6 rounded-xl border border-slate-100 flex flex-col justify-between h-32 relative overflow-hidden group">
+                    <div class="absolute -right-4 -top-4 w-24 h-24 bg-secondary/5 rounded-full blur-2xl group-hover:bg-secondary/10 transition-all"></div>
+                    <div class="flex justify-between items-start">
+                        <span class="text-slate-500 text-[11px] font-bold uppercase tracking-wider">Total Session Hours</span>
+                        <span class="material-symbols-outlined text-secondary">schedule</span>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-3xl font-black">{{ "%.1f"|format(metrics.avg_hours) }}</span>
+                    </div>
+                </div>
+                <!-- KPI 3 -->
+                <div class="bg-white p-6 rounded-xl border border-slate-100 flex flex-col justify-between h-32 relative overflow-hidden group">
+                    <div class="absolute -right-4 -top-4 w-24 h-24 bg-tertiary/5 rounded-full blur-2xl group-hover:bg-tertiary/10 transition-all"></div>
+                    <div class="flex justify-between items-start">
+                        <span class="text-slate-500 text-[11px] font-bold uppercase tracking-wider">Completion Rate</span>
+                        <span class="material-symbols-outlined text-tertiary">verified</span>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-3xl font-black">{{ "%.1f"|format(metrics.completion_rate) }}%</span>
+                    </div>
+                </div>
+                <!-- KPI 4 -->
+                <div class="bg-white p-6 rounded-xl border border-slate-100 flex flex-col justify-between h-32 relative overflow-hidden group">
+                    <div class="absolute -right-4 -top-4 w-24 h-24 bg-slate-100 rounded-full blur-2xl group-hover:bg-slate-200 transition-all"></div>
+                    <div class="flex justify-between items-start">
+                        <span class="text-slate-500 text-[11px] font-bold uppercase tracking-wider">Total Employees</span>
+                        <span class="material-symbols-outlined text-slate-500">badge</span>
+                    </div>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-3xl font-black">{{ metrics.total_emp }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visualizations -->
+            <div class="grid grid-cols-12 gap-6">
+                <!-- Bar Chart: BU-wise -->
+                <div class="col-span-12 lg:col-span-8 bg-white p-8 rounded-xl border border-slate-100">
+                    <h4 class="text-lg font-bold text-slate-900 mb-1">BU-wise Training Performance</h4>
+                    <p class="text-xs text-slate-500 mb-8">Comparative analytics across business units</p>
+                    <div class="h-64 w-full relative">
+                        <canvas id="buChart"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Doughnut Chart: TT -->
+                <div class="col-span-12 lg:col-span-4 bg-white p-8 rounded-xl border border-slate-100 flex flex-col">
+                    <h4 class="text-lg font-bold text-slate-900 mb-1">Training Type</h4>
+                    <p class="text-xs text-slate-500 mb-4">Allocation by category</p>
+                    <div class="relative w-full h-64 mx-auto">
+                        <canvas id="typeChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Bar Chart: Dept-wise -->
+                <div class="col-span-12 lg:col-span-7 bg-white p-8 rounded-xl border border-slate-100">
+                    <h4 class="text-lg font-bold text-slate-900 mb-1">Department-wise Training Performance</h4>
+                    <p class="text-xs text-slate-500 mb-8">Department completion rates</p>
+                    <div class="h-64 w-full relative">
+                        <canvas id="deptChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Vertical Stats Rail -->
+                <div class="col-span-12 lg:col-span-5 bg-slate-50 p-6 rounded-xl border border-slate-200/50 space-y-4">
+                    <h4 class="text-sm font-extrabold uppercase tracking-widest text-primary flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">lightbulb</span> AI Insights
+                    </h4>
+                    <div class="bg-white p-4 rounded-lg shadow-sm">
+                        <div class="flex gap-3">
+                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-green-700">trending_up</span>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold">Performance Summary</p>
+                                <p class="text-[11px] text-slate-500 mt-1">Completion rate is {{ "%.1f"|format(metrics.completion_rate) }}%. Adjust filters to see dynamic analytics per division.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Employee Table -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="px-8 py-6 border-b border-slate-50">
+                    <h4 class="text-lg font-bold text-slate-900">Employee Training Details</h4>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left whitespace-nowrap">
+                        <thead>
+                            <tr class="bg-slate-50 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                                <th class="px-6 py-4">Emp ID</th>
+                                <th class="px-6 py-4">Name</th>
+                                <th class="px-6 py-4">Department</th>
+                                <th class="px-6 py-4">Business Unit</th>
+                                <th class="px-6 py-4">Training Name</th>
+                                <th class="px-6 py-4">Status</th>
+                                <th class="px-6 py-4 text-right">Hours</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            {% for row in records %}
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="px-6 py-4 text-xs font-mono text-slate-500">#{{ row['Emp ID'] }}</td>
+                                <td class="px-6 py-4 text-sm font-bold">{{ row['Employee Name'] }}</td>
+                                <td class="px-6 py-4 text-sm text-slate-500">{{ row['Department'] }}</td>
+                                <td class="px-6 py-4 text-sm text-slate-500">{{ row['Business Unit'] }}</td>
+                                <td class="px-6 py-4 text-sm font-medium">{{ row['Training Name'] }}</td>
+                                <td class="px-6 py-4">
+                                    {% set status = (row['Training Status']|string).strip() if row['Training Status'] else 'Unknown' %}
+                                    {% if 'Complete' in status %}
+                                      <span class="px-2.5 py-1 rounded-full bg-green-100 text-green-800 text-[10px] font-bold uppercase">{{ status }}</span>
+                                    {% elif 'Progress' in status %}
+                                      <span class="px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-800 text-[10px] font-bold uppercase">{{ status }}</span>
+                                    {% else %}
+                                      <span class="px-2.5 py-1 rounded-full bg-red-100 text-red-800 text-[10px] font-bold uppercase">{{ status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 text-right text-sm font-bold">
+                                    {% if row['Overall Training Duration (Planned Hrs)'] != "" %}
+                                      {{ "%.1f"|format(row['Overall Training Duration (Planned Hrs)']|float) }}
+                                    {% else %}
+                                      -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const buLabels = {{ bu_labels | tojson }};
+        const buValues = {{ bu_values | tojson }};
+        const typeLabels = {{ type_labels | tojson }};
+        const typeValues = {{ type_values | tojson }};
+        const deptLabels = {{ dept_labels | tojson }};
+        const deptValues = {{ dept_values | tojson }};
+
+        new Chart(document.getElementById('buChart'), {
+            type: 'bar',
+            data: {
+                labels: buLabels,
+                datasets: [{
+                    label: 'Completion %',
+                    data: buValues,
+                    backgroundColor: '#003d9b',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { 
+                    x: { max: 100, grid: { display: false } },
+                    y: { grid: { display: false } }
+                }
+            }
+        });
+
+        new Chart(document.getElementById('deptChart'), {
+            type: 'bar',
+            data: {
+                labels: deptLabels,
+                datasets: [{
+                    label: 'Completion %',
+                    data: deptValues,
+                    backgroundColor: '#0052cc',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { 
+                    y: { max: 100, grid: { display: false } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
+
+        new Chart(document.getElementById('typeChart'), {
+            type: 'doughnut',
+            data: {
+                labels: typeLabels,
+                datasets: [{
+                    data: typeValues,
+                    backgroundColor: ['#003d9b', '#006e2c', '#584000', '#fbbc05', '#89fa9b']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'right' } }
+            }
+        });
+    </script>
+</body>
+</html>
