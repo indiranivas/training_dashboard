@@ -289,6 +289,98 @@
                     </div>
                 </div>
                 <!-- Export Options Section -->
+                <div class="col-span-12 bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                    <div class="px-8 py-6 border-b border-slate-50 flex justify-between items-center">
+                        <div>
+                            <h4 class="text-lg font-bold text-slate-900">Department-wise Training Hours Categories</h4>
+                            <p class="text-xs text-slate-500 mt-1">Distribution of employees by training hours: A (≥20), B (15-19), C (10-14), D (5-9), E (0.1-4), F (0)</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="flex items-center bg-surface-container-low border border-slate-200 rounded-lg p-1">
+                                <button id="dept-count-btn" onclick="setDeptDisplay('count')" class="px-3 py-1.5 text-xs font-medium rounded-md transition-all bg-primary text-white">Count</button>
+                                <button id="dept-percentage-btn" onclick="setDeptDisplay('percentage')" class="px-3 py-1.5 text-xs font-medium rounded-md transition-all text-slate-600 hover:text-slate-800">%</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table id="dept-hours-table" class="w-full text-left whitespace-nowrap">
+                            <thead>
+                                <tr class="bg-slate-50 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                                    <th class="px-6 py-4">Department</th>
+                                    <th class="px-6 py-4 text-center">A (≥20 Hrs)</th>
+                                    <th class="px-6 py-4 text-center">B (15-19 Hrs)</th>
+                                    <th class="px-6 py-4 text-center">C (10-14 Hrs)</th>
+                                    <th class="px-6 py-4 text-center">D (5-9 Hrs)</th>
+                                    <th class="px-6 py-4 text-center">E (0.1-4 Hrs)</th>
+                                    <th class="px-6 py-4 text-center">F (0 Hrs)</th>
+                                    <th class="px-6 py-4 text-center">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">
+                                {% for dept, data in metrics.dept_hours_categories.items() %}
+                                <tr class="hover:bg-slate-50/50 transition-colors">
+                                    <td class="px-6 py-4 text-sm font-bold text-slate-900">{{ dept }}</td>
+                                    <td class="px-6 py-4 text-center text-sm font-semibold bg-green-50"><a href="/employees?department={{ dept | urlencode }}&hours_category=A" class="text-blue-700 hover:text-blue-900">{{ data['A'] }}</a></td>
+                                    <td class="px-6 py-4 text-center text-sm font-semibold bg-blue-50"><a href="/employees?department={{ dept | urlencode }}&hours_category=B" class="text-blue-700 hover:text-blue-900">{{ data['B'] }}</a></td>
+                                    <td class="px-6 py-4 text-center text-sm font-semibold bg-cyan-50"><a href="/employees?department={{ dept | urlencode }}&hours_category=C" class="text-blue-700 hover:text-blue-900">{{ data['C'] }}</a></td>
+                                    <td class="px-6 py-4 text-center text-sm font-semibold bg-yellow-50"><a href="/employees?department={{ dept | urlencode }}&hours_category=D" class="text-blue-700 hover:text-blue-900">{{ data['D'] }}</a></td>
+                                    <td class="px-6 py-4 text-center text-sm font-semibold bg-orange-50"><a href="/employees?department={{ dept | urlencode }}&hours_category=E" class="text-blue-700 hover:text-blue-900">{{ data['E'] }}</a></td>
+                                    <td class="px-6 py-4 text-center text-sm font-semibold bg-red-50"><a href="/employees?department={{ dept | urlencode }}&hours_category=F" class="text-blue-700 hover:text-blue-900">{{ data['F'] }}</a></td>
+                                    <td class="px-6 py-4 text-center text-sm font-bold">{{ data['total'] }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- BUSINESS-UNIT-WISE TRAINING HOURS CATEGORIES -->
+                <div class="col-span-12 bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                    <div class="px-8 py-6 border-b border-slate-50 flex justify-between items-center">
+                        <div>
+                            <h4 class="text-lg font-bold text-slate-900">Business Unit-wise Training Hours Categories</h4>
+                            <p class="text-xs text-slate-500 mt-1">Distribution of employees by training hours: A (≥20), B (15-19), C (10-14), D (5-9), E (0.1-4), F (0)</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="flex items-center bg-surface-container-low border border-slate-200 rounded-lg p-1">
+                                <button id="bu-count-btn" onclick="setBuDisplay('count')" class="px-3 py-1.5 text-xs font-medium rounded-md transition-all bg-primary text-white">Count</button>
+                                <button id="bu-percentage-btn" onclick="setBuDisplay('percentage')" class="px-3 py-1.5 text-xs font-medium rounded-md transition-all text-slate-600 hover:text-slate-800">%</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table id="bu-hours-table" class="w-full text-left whitespace-nowrap">
+                            <thead>
+                                <tr class="bg-slate-50 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                                    <th class="px-6 py-4">Business Unit</th>
+                                    <th class="px-6 py-4 text-center">A (≥20 Hrs)</th>
+                                    <th class="px-6 py-4 text-center">B (15-19 Hrs)</th>
+                                    <th class="px-6 py-4 text-center">C (10-14 Hrs)</th>
+                                    <th class="px-6 py-4 text-center">D (5-9 Hrs)</th>
+                                    <th class="px-6 py-4 text-center">E (0.1-4 Hrs)</th>
+                                    <th class="px-6 py-4 text-center">F (0 Hrs)</th>
+                                    <th class="px-6 py-4 text-center">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">
+                                {% for bu, data in metrics.bu_hours_categories.items() %}
+                                <tr class="hover:bg-slate-50/50 transition-colors">
+                                    <td class="px-6 py-4 text-sm font-bold text-slate-900">{{ bu }}</td>
+                                    <td class="px-6 py-4 text-center text-sm font-semibold bg-green-50"><a href="/employees?business_unit={{ bu | urlencode }}&hours_category=A" class="text-blue-700 hover:text-blue-900">{{ data['A'] }}</a></td>
+                                    <td class="px-6 py-4 text-center text-sm font-semibold bg-blue-50"><a href="/employees?business_unit={{ bu | urlencode }}&hours_category=B" class="text-blue-700 hover:text-blue-900">{{ data['B'] }}</a></td>
+                                    <td class="px-6 py-4 text-center text-sm font-semibold bg-cyan-50"><a href="/employees?business_unit={{ bu | urlencode }}&hours_category=C" class="text-blue-700 hover:text-blue-900">{{ data['C'] }}</a></td>
+                                    <td class="px-6 py-4 text-center text-sm font-semibold bg-yellow-50"><a href="/employees?business_unit={{ bu | urlencode }}&hours_category=D" class="text-blue-700 hover:text-blue-900">{{ data['D'] }}</a></td>
+                                    <td class="px-6 py-4 text-center text-sm font-semibold bg-orange-50"><a href="/employees?business_unit={{ bu | urlencode }}&hours_category=E" class="text-blue-700 hover:text-blue-900">{{ data['E'] }}</a></td>
+                                    <td class="px-6 py-4 text-center text-sm font-semibold bg-red-50"><a href="/employees?business_unit={{ bu | urlencode }}&hours_category=F" class="text-blue-700 hover:text-blue-900">{{ data['F'] }}</a></td>
+                                    <td class="px-6 py-4 text-center text-sm font-bold">{{ data['total'] }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Export Options Section -->
                 <div class="col-span-12 grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div
                         class="bg-surface-container-low p-5 rounded-xl border border-outline-variant/10 flex items-center gap-4 group hover:bg-surface-container-high transition-colors cursor-pointer">
@@ -438,6 +530,128 @@
             }
         });
     </script>
+
+    <script>
+        // Store original data for toggling
+        let deptOriginalData = {};
+        let buOriginalData = {};
+        let deptCurrentMode = 'count';
+        let buCurrentMode = 'count';
+
+        // Initialize original data on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Store department data
+            const deptTable = document.querySelector('#dept-hours-table tbody');
+            if (deptTable) {
+                const rows = deptTable.querySelectorAll('tr');
+                rows.forEach((row, index) => {
+                    const cells = row.querySelectorAll('td');
+                    deptOriginalData[index] = [];
+                    for (let i = 1; i <= 7; i++) { // A through F and Total columns
+                        deptOriginalData[index].push(cells[i].textContent);
+                    }
+                });
+            }
+
+            // Store business unit data
+            const buTable = document.querySelector('#bu-hours-table tbody');
+            if (buTable) {
+                const rows = buTable.querySelectorAll('tr');
+                rows.forEach((row, index) => {
+                    const cells = row.querySelectorAll('td');
+                    buOriginalData[index] = [];
+                    for (let i = 1; i <= 7; i++) { // A through F and Total columns
+                        buOriginalData[index].push(cells[i].textContent);
+                    }
+                });
+            }
+        });
+
+        // Department-wise display toggle functions
+        function setDeptDisplay(mode) {
+            if (deptCurrentMode === mode) return; // No change needed
+
+            deptCurrentMode = mode;
+            const table = document.querySelector('#dept-hours-table tbody');
+            const countBtn = document.getElementById('dept-count-btn');
+            const percentageBtn = document.getElementById('dept-percentage-btn');
+
+            if (mode === 'percentage') {
+                // Update button states
+                countBtn.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-all text-slate-600 hover:text-slate-800';
+                percentageBtn.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-all bg-primary text-white';
+
+                // Convert counts to percentages
+                const rows = table.querySelectorAll('tr');
+                rows.forEach((row, index) => {
+                    const cells = row.querySelectorAll('td');
+                    const total = parseInt(deptOriginalData[index][6]); // Total column (index 6)
+
+                    for (let i = 1; i <= 6; i++) { // A through F columns (indices 0-5)
+                        const count = parseInt(deptOriginalData[index][i-1]);
+                        const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : '0.0';
+                        cells[i].textContent = percentage + '%';
+                    }
+                });
+            } else {
+                // Update button states
+                countBtn.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-all bg-primary text-white';
+                percentageBtn.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-all text-slate-600 hover:text-slate-800';
+
+                // Show original counts
+                const rows = table.querySelectorAll('tr');
+                rows.forEach((row, index) => {
+                    const cells = row.querySelectorAll('td');
+                    for (let i = 1; i <= 7; i++) { // A through F and Total columns
+                        cells[i].textContent = deptOriginalData[index][i-1];
+                    }
+                });
+            }
+        }
+
+        // Business Unit-wise display toggle functions
+        function setBuDisplay(mode) {
+            if (buCurrentMode === mode) return; // No change needed
+
+            buCurrentMode = mode;
+            const table = document.querySelector('#bu-hours-table tbody');
+            const countBtn = document.getElementById('bu-count-btn');
+            const percentageBtn = document.getElementById('bu-percentage-btn');
+
+            if (mode === 'percentage') {
+                // Update button states
+                countBtn.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-all text-slate-600 hover:text-slate-800';
+                percentageBtn.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-all bg-primary text-white';
+
+                // Convert counts to percentages
+                const rows = table.querySelectorAll('tr');
+                rows.forEach((row, index) => {
+                    const cells = row.querySelectorAll('td');
+                    const total = parseInt(buOriginalData[index][6]); // Total column (index 6)
+
+                    for (let i = 1; i <= 6; i++) { // A through F columns (indices 0-5)
+                        const count = parseInt(buOriginalData[index][i-1]);
+                        const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : '0.0';
+                        cells[i].textContent = percentage + '%';
+                    }
+                });
+            } else {
+                // Update button states
+                countBtn.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-all bg-primary text-white';
+                percentageBtn.className = 'px-3 py-1.5 text-xs font-medium rounded-md transition-all text-slate-600 hover:text-slate-800';
+
+                // Show original counts
+                const rows = table.querySelectorAll('tr');
+                rows.forEach((row, index) => {
+                    const cells = row.querySelectorAll('td');
+                    for (let i = 1; i <= 7; i++) { // A through F and Total columns
+                        cells[i].textContent = buOriginalData[index][i-1];
+                    }
+                });
+            }
+        }
+    </script>
+
     {% include "chatbot.html" %}
 </body>
 

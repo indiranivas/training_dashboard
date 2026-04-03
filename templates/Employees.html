@@ -180,6 +180,9 @@
                     <h3 class="text-3xl font-headline font-extrabold text-on-surface tracking-tight">Talent Ecosystem
                     </h3>
                     <p class="text-on-surface-variant text-sm">Managing {{ all_count }} employees across {{ business_units|length }} business units.</p>
+                    {% if hours_category and hours_category != 'All' %}
+                    <p class="text-on-surface-variant text-xs font-bold">Showing employees in hours category: <span class="text-primary">{{ hours_category }}</span></p>
+                    {% endif %}
                 </div>
                 <button
                     class="bg-primary text-white px-6 py-2.5 rounded-lg font-semibold flex items-center gap-2 shadow-md hover:bg-primary-container active:scale-[0.98] transition-all">
@@ -191,34 +194,15 @@
             <div class="grid grid-cols-12 gap-4">
                 <div
                     class="col-span-12 lg:col-span-8 bg-surface-container-low p-1.5 rounded-xl flex gap-2 overflow-x-auto">
-                    <button
-                        class="bg-surface-container-lowest px-4 py-2 rounded-lg text-sm font-bold text-primary shadow-sm whitespace-nowrap">All
-                        Employees</button>
-                    <button
-                        class="px-4 py-2 rounded-lg text-sm font-medium text-on-surface-variant hover:bg-surface-container-highest transition-colors whitespace-nowrap">Engineering</button>
-                    <button
-                        class="px-4 py-2 rounded-lg text-sm font-medium text-on-surface-variant hover:bg-surface-container-highest transition-colors whitespace-nowrap">Product
-                        Management</button>
-                    <button
-                        class="px-4 py-2 rounded-lg text-sm font-medium text-on-surface-variant hover:bg-surface-container-highest transition-colors whitespace-nowrap">Data
-                        Science</button>
-                    <button
-                        class="px-4 py-2 rounded-lg text-sm font-medium text-on-surface-variant hover:bg-surface-container-highest transition-colors whitespace-nowrap">Corporate
-                        Strategy</button>
+                    <a href="/employees?department=All&business_unit=All&hours_category=All"
+                        class="px-4 py-2 rounded-lg text-sm font-bold text-primary bg-surface-container-lowest shadow-sm whitespace-nowrap">All Employees</a>
+                    {% for bu in business_units %}
+                    <a href="/employees?department=All&business_unit={{ bu | urlencode }}&hours_category=All"
+                        class="px-4 py-2 rounded-lg text-sm font-medium text-on-surface-variant hover:bg-surface-container-highest transition-colors whitespace-nowrap">{{ bu }}</a>
+                    {% endfor %}
                 </div>
                 <form method="GET" action="/employees" class="col-span-12 lg:col-span-4 flex gap-4">
-                    <div class="relative flex-1">
-                        <select name="business_unit" onchange="this.form.submit()"
-                            class="w-full bg-surface-container-low border-none rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary/10 py-3 px-4 appearance-none">
-                            <option value="All" {% if bu_filter == 'All' %}selected{% endif %}>Business Unit: All</option>
-                            {% for b in business_units %}
-                            <option value="{{ b }}" {% if bu_filter == b %}selected{% endif %}>{{ b }}</option>
-                            {% endfor %}
-                        </select>
-                        <span
-                            class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">filter_list</span>
-                    </div>
-                    <div class="relative flex-1">
+                        <div class="relative flex-1">
                         <select name="department" onchange="this.form.submit()"
                             class="w-full bg-surface-container-low border-none rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary/10 py-3 px-4 appearance-none">
                             <option value="All" {% if dept_filter == 'All' %}selected{% endif %}>Department: All</option>
@@ -228,6 +212,7 @@
                         </select>
                         <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">domain</span>
                     </div>
+                    <input type="hidden" name="hours_category" value="{{ hours_category or 'All' }}" />
                 </form>
             </div>
             <!-- Employee List Table - Card Based -->
@@ -283,8 +268,17 @@
                                 </div>
                             </td>
                             <td class="px-6 py-5">
-                                <div class="flex gap-1.5 flex-wrap w-40">
+                                <div class="flex items-center gap-2">
                                     <span class="px-2 py-0.5 bg-secondary-container text-on-secondary-container text-[10px] font-black rounded-full uppercase truncate max-w-full">{{ row['Training_Count'] }} Course(s)</span>
+                                    <button type="button" class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100" title="View training courses" onclick="showCourseModal(this)"
+                                        data-emp-id="{{ row['Emp ID'] }}"
+                                        data-emp-name="{{ row['Employee Name']|e }}"
+                                        data-department="{{ row['Department']|e }}"
+                                        data-bu="{{ row['Business Unit']|e }}"
+                                        data-total-hours="{{ row['Total_Hours'] }}"
+                                    >
+                                        <span class="material-symbols-outlined">auto_stories</span>
+                                    </button>
                                 </div>
                             </td>
                             <td class="px-6 py-5 text-right">
@@ -300,7 +294,7 @@
                     <p class="text-xs text-on-surface-variant font-medium">Showing {{ records|length }} of {{ filtered_count }} entries (Total: {{ all_count }})</p>
                     <div class="flex gap-2">
                         {% set prev_page = page - 1 if page > 1 else 1 %}
-                        <a href="?page={{ prev_page }}&department={{ dept_filter }}&business_unit={{ bu_filter }}"
+                        <a href="?page={{ prev_page }}&department={{ dept_filter }}&business_unit={{ bu_filter }}&hours_category={{ hours_category }}"
                             class="p-2 border border-outline-variant/20 rounded-lg transition-colors {% if page == 1 %}bg-surface-container-lowest opacity-30 cursor-not-allowed pointer-events-none{% else %}bg-surface-container-lowest hover:bg-surface-container-high{% endif %}">
                             <span class="material-symbols-outlined text-sm">chevron_left</span>
                         </a>
@@ -314,13 +308,13 @@
                             {% if p == page %}
                                 <span class="px-4 py-1.5 bg-primary text-white rounded-lg text-xs font-bold">{{ p }}</span>
                             {% else %}
-                                <a href="?page={{ p }}&department={{ dept_filter }}&business_unit={{ bu_filter }}"
+                                <a href="?page={{ p }}&department={{ dept_filter }}&business_unit={{ bu_filter }}&hours_category={{ hours_category }}"
                                     class="px-4 py-1.5 bg-surface-container-lowest border border-outline-variant/20 rounded-lg text-xs font-medium hover:bg-surface-container-high transition-colors">{{ p }}</a>
                             {% endif %}
                         {% endfor %}
 
                         {% set next_page = page + 1 if page < total_pages else total_pages %}
-                        <a href="?page={{ next_page }}&department={{ dept_filter }}&business_unit={{ bu_filter }}"
+                        <a href="?page={{ next_page }}&department={{ dept_filter }}&business_unit={{ bu_filter }}&hours_category={{ hours_category }}"
                             class="p-2 border border-outline-variant/20 rounded-lg transition-colors {% if page == total_pages or total_pages == 0 %}bg-surface-container-lowest opacity-30 cursor-not-allowed pointer-events-none{% else %}bg-surface-container-lowest hover:bg-surface-container-high{% endif %}">
                             <span class="material-symbols-outlined text-sm">chevron_right</span>
                         </a>
@@ -356,6 +350,105 @@
             </div>
         </div>
     </main>
+
+    <!-- Course details modal -->
+    <div id="courseModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
+        <div class="w-full max-w-lg rounded-xl bg-blue-50 p-6 shadow-2xl border border-blue-200">
+            <div class="flex items-start justify-between">
+                <div>
+                    <h3 id="modalEmpName" class="text-xl font-bold text-blue-900">Employee Name</h3>
+                    <p id="modalEmpMeta" class="text-sm text-blue-700">Department - BU</p>
+                </div>
+                <button type="button" class="text-blue-600 hover:text-blue-900" onclick="closeCourseModal()">✕</button>
+            </div>
+            <div class="mt-4">
+                <p class="text-xs text-blue-600">Total Hours: <span id="modalTotalHours" class="font-semibold">0</span></p>
+                <h4 class="mt-3 text-sm font-semibold text-blue-800">Courses Taken</h4>
+                <div id="modalCourseContainer" class="mt-2 space-y-3 max-h-64 overflow-y-auto">
+                    <!-- Courses will be inserted here as cards -->
+                </div>
+                <p id="modalNoCourses" class="mt-2 text-sm leading-6 text-blue-700 hidden">No courses found.</p>
+            </div>
+            <div class="mt-5 text-right">
+                <button type="button" class="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 transition-colors" onclick="closeCourseModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const employeeCourses = {{ employee_courses | tojson }};
+
+        function showCourseModal(button) {
+            const empId = String(button.dataset.empId || '');
+            const employeeName = button.dataset.empName || 'Unknown';
+            const department = button.dataset.department || 'Unknown';
+            const businessUnit = button.dataset.bu || 'Unknown';
+            const totalHours = button.dataset.totalHours || '0';
+
+            const courses = (employeeCourses[empId] || []);
+            const container = document.getElementById('modalCourseContainer');
+            const noCourses = document.getElementById('modalNoCourses');
+            container.innerHTML = '';
+
+            if (courses.length === 0) {
+                noCourses.classList.remove('hidden');
+            } else {
+                noCourses.classList.add('hidden');
+                courses.forEach(course => {
+                    const status = (course['Training Status'] || '').toLowerCase().trim();
+                    const isActive = ['active', 'completed', 'in progress', 'ongoing', 'current', 'yes'].some(v => status.includes(v));
+                    const statusClass = isActive ? 'text-green-700 font-bold' : 'text-red-700 font-bold';
+                    const displayStatus = status ? course['Training Status'] : 'Inactive';
+
+                    const startDateRaw = course['Start Date'] || '-';
+                    const endDateRaw = course['End Date'] || '-';
+                    let startDate = '-';
+                    let endDate = '-';
+                    if (startDateRaw && startDateRaw !== '-') {
+                        const dateObj = new Date(startDateRaw);
+                        startDate = dateObj.toLocaleDateString('en-GB'); // DD/MM/YYYY format
+                    }
+                    if (endDateRaw && endDateRaw !== '-') {
+                        const dateObj = new Date(endDateRaw);
+                        endDate = dateObj.toLocaleDateString('en-GB'); // DD/MM/YYYY format
+                    }
+
+                    const card = document.createElement('div');
+                    card.className = 'bg-white p-4 rounded-lg shadow-md border border-blue-200';
+                    card.innerHTML = `
+                        <h5 class="font-semibold text-blue-900 mb-2">${course['Training Name'] || '-'}</h5>
+                        <div class="grid grid-cols-2 gap-2 text-sm text-blue-800">
+                            <div><strong>Hours:</strong> ${parseFloat(course['Overall Training Duration (Planned Hrs)'] || 0).toFixed(1)}</div>
+                            <div><strong>Status:</strong> <span class="${statusClass}">${displayStatus}</span></div>
+                            <div><strong>Start Date:</strong> ${startDate}</div>
+                            <div><strong>End Date:</strong> ${endDate}</div>
+                            <div class="col-span-2"><strong>Source:</strong> ${course['Training Source'] || 'Unknown'}</div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+
+            document.getElementById('modalEmpName').textContent = employeeName;
+            document.getElementById('modalEmpMeta').textContent = `${empId} • ${department} • ${businessUnit}`;
+            document.getElementById('modalTotalHours').textContent = parseFloat(totalHours).toFixed(1);
+
+            document.getElementById('courseModal').classList.remove('hidden');
+            document.getElementById('courseModal').classList.add('flex');
+        }
+
+        function closeCourseModal() {
+            document.getElementById('courseModal').classList.remove('flex');
+            document.getElementById('courseModal').classList.add('hidden');
+        }
+
+        document.getElementById('courseModal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeCourseModal();
+            }
+        });
+    </script>
+
     {% include "chatbot.html" %}
 </body>
 
