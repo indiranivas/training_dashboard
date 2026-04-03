@@ -85,19 +85,13 @@ def compute_metrics(df):
     completed_emp = emp_agg['Completed'].sum()
 
     coverage = round((completed_emp / total_emp) * 100, 1) if total_emp > 0 else 0
-    completion_rate = coverage  # Completion rate securely maps to aggregated employees
+    completion_rate = coverage
 
-    # Deduplicate sessions by Training Name and Start Date so we don't multiply durations by employee counts
     unique_sessions = df.drop_duplicates(subset=['Training Name', 'Start Date'])
     avg_hours = round(unique_sessions['Overall Training Duration (Planned Hrs)'].sum(), 1)
     
-    # BU based on aggregated employee completion
     bu = emp_agg.groupby('BU')['Completed'].mean() * 100
-
-    # Department based on aggregated employee completion
     dept = emp_agg.groupby('Dept')['Completed'].mean() * 100
-
-    # Training Type (Distribution of types percentages across all training)
     ttype = (df['Training Type'].value_counts(normalize=True) * 100).round(1)
 
     # =============== DEPARTMENT-WISE HOURS CATEGORIES ===============
@@ -132,7 +126,6 @@ def compute_metrics(df):
         }
 
     # =============== DEPARTMENT-WISE COMPLETION PERCENTAGE CATEGORIES ===============
-    # `dept` is already in 0-100 percentage from emp_agg aggregation.
     dept_completion_pct = dept
     dept_completion_categories = {}
     for dept_name in dept_completion_pct.index:
@@ -171,15 +164,12 @@ def compute_metrics(df):
 def dashboard():
     df = load_data()
     
-    # Get unique options before filtering
     departments = sorted([str(d) for d in df['Department'].dropna().unique()])
     business_units = sorted([str(b) for b in df['Business Unit'].dropna().unique()])
 
-    # Get query params
     dept_filter = request.args.get('department', 'All')
     bu_filter = request.args.get('business_unit', 'All')
 
-    # Apply filters
     if dept_filter != 'All':
         df = df[df['Department'] == dept_filter]
     
@@ -187,9 +177,6 @@ def dashboard():
         df = df[df['Business Unit'] == bu_filter]
 
     metrics = compute_metrics(df)
-    
-    # Get top 50 records for frontend table
-    # Mapping NA to blank strings so JSON serialization doesn't fail with NaNs.
     records = df.head(50).fillna("").to_dict('records')
 
     return render_template(
@@ -200,13 +187,10 @@ def dashboard():
         business_units=business_units,
         dept_filter=dept_filter,
         bu_filter=bu_filter,
-
         bu_labels=list(metrics["bu"].index.astype(str)),
         bu_values=list(metrics["bu"].round(1).values),
-
         dept_labels=list(metrics["dept"].index.astype(str)),
         dept_values=list(metrics["dept"].round(1).values),
-
         type_labels=list(metrics["ttype"].index.astype(str)),
         type_values=list(metrics["ttype"].round(1).values)
     )
@@ -240,10 +224,8 @@ def employees():
     if hours_category and hours_category != 'All':
         agg_df = agg_df[agg_df['Hours_Category'] == hours_category]
     
-    # Sort or format
     agg_df = agg_df.sort_values(by='Total_Hours', ascending=False)
     
-    # Pagination Logic
     try:
         page = int(request.args.get('page', 1))
     except ValueError:
