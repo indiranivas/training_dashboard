@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 import pandas as pd
 import os
+from urllib.parse import quote_plus
 from genai_helper import (
     generate_query_plan,
     execute_query_plan,
@@ -11,7 +12,11 @@ from genai_helper import (
 
 app = Flask(__name__)
 
+# URL encoder for dashboards to handle special chars like ampersand safely
+app.jinja_env.filters['urlencode'] = lambda value: quote_plus(str(value))
+
 _DATA_CACHE = {"mtime": None, "df": None}
+
 
 def load_data():
     path = "data.xlsx"
@@ -25,6 +30,12 @@ def load_data():
 
     df = pd.read_excel(path)
     df.columns = [col.strip() for col in df.columns]
+
+    # Trim whitespace and fix values in key columns to avoid URL filter mismatch
+    if 'Department' in df.columns:
+        df['Department'] = df['Department'].fillna('').astype(str).str.strip()
+    if 'Business Unit' in df.columns:
+        df['Business Unit'] = df['Business Unit'].fillna('').astype(str).str.strip()
 
     df['Overall Training Duration (Planned Hrs)'] = pd.to_numeric(
         df['Overall Training Duration (Planned Hrs)'], errors='coerce'
@@ -44,14 +55,52 @@ def load_data():
     return _DATA_CACHE["df"]
 
 
+def categorize_hours(hours):
+    """Categorize training hours into A-F categories"""
+    if pd.isna(hours):
+        return 'F'
+    if hours >= 20:
+        return 'A'
+    elif hours >= 15:
+        return 'B'
+    elif hours >= 10:
+        return 'C'
+    elif hours >= 5:
+        return 'D'
+    elif hours > 0:
+        return 'E'
+    else:
+        return 'F'
+
+
+def categorize_completion_percentage(percentage):
+    """Categorize completion percentage into A-F categories"""
+    if pd.isna(percentage):
+        return 'F'
+    if percentage >= 100:
+        return 'A'
+    elif percentage >= 75:
+        return 'B'
+    elif percentage >= 50:
+        return 'C'
+    elif percentage >= 25:
+        return 'D'
+    elif percentage >= 1:
+        return 'E'
+    else:
+        return 'F'
+
+
 def compute_metrics(df):
     if df.empty:
         return {
             "coverage": 0, "avg_hours": 0, "completion_rate": 0, "total_emp": 0,
-            "bu": pd.Series(dtype=float), "dept": pd.Series(dtype=float),
-            "ttype": pd.Series(dtype=float)
+            "bu": pd.Series(dtype=float), "dept": pd.Series(dtype=float), "ttype": pd.Series(dtype=float),
+            "dept_hours_categories": {}, "bu_hours_categories": {},
+            "dept_completion_categories": {}, "bu_completion_categories": {}
         }
 
+    # Employee-level Aggregation for Accurate Completion Rate
     emp_agg = df.groupby('Emp ID').agg(
         Total_Hours=('Overall Training Duration (Planned Hrs)', 'sum'),
         BU=('Business Unit', 'first'),
@@ -59,18 +108,69 @@ def compute_metrics(df):
     )
     emp_agg['Completed'] = emp_agg['Total_Hours'] >= 20
 
-    total_emp     = len(emp_agg)
+    total_emp = len(emp_agg)
     completed_emp = emp_agg['Completed'].sum()
 
-    coverage        = round((completed_emp / total_emp) * 100, 1) if total_emp > 0 else 0
+    coverage = round((completed_emp / total_emp) * 100, 1) if total_emp > 0 else 0
     completion_rate = coverage
 
     unique_sessions = df.drop_duplicates(subset=['Training Name', 'Start Date'])
-    avg_hours       = round(unique_sessions['Overall Training Duration (Planned Hrs)'].sum(), 1)
+    avg_hours = round(unique_sessions['Overall Training Duration (Planned Hrs)'].sum(), 1)
 
-    bu    = emp_agg.groupby('BU')['Completed'].mean() * 100
-    dept  = emp_agg.groupby('Dept')['Completed'].mean() * 100
+    bu = emp_agg.groupby('BU')['Completed'].mean() * 100
+    dept = emp_agg.groupby('Dept')['Completed'].mean() * 100
     ttype = (df['Training Type'].value_counts(normalize=True) * 100).round(1)
+
+    # =============== DEPARTMENT-WISE HOURS CATEGORIES ===============
+    emp_agg['Hours_Category'] = emp_agg['Total_Hours'].apply(categorize_hours)
+    dept_hours_dist = emp_agg.groupby(['Dept', 'Hours_Category']).size().unstack(fill_value=0)
+    dept_hours_categories = {}
+    for dept_name in dept_hours_dist.index:
+        dept_total = dept_hours_dist.loc[dept_name].sum()
+        dept_hours_categories[str(dept_name)] = {
+            'A': int(dept_hours_dist.loc[dept_name].get('A', 0)),
+            'B': int(dept_hours_dist.loc[dept_name].get('B', 0)),
+            'C': int(dept_hours_dist.loc[dept_name].get('C', 0)),
+            'D': int(dept_hours_dist.loc[dept_name].get('D', 0)),
+            'E': int(dept_hours_dist.loc[dept_name].get('E', 0)),
+            'F': int(dept_hours_dist.loc[dept_name].get('F', 0)),
+            'total': dept_total
+        }
+
+    # =============== BU-WISE HOURS CATEGORIES ===============
+    bu_hours_dist = emp_agg.groupby(['BU', 'Hours_Category']).size().unstack(fill_value=0)
+    bu_hours_categories = {}
+    for bu_name in bu_hours_dist.index:
+        bu_total = bu_hours_dist.loc[bu_name].sum()
+        bu_hours_categories[str(bu_name)] = {
+            'A': int(bu_hours_dist.loc[bu_name].get('A', 0)),
+            'B': int(bu_hours_dist.loc[bu_name].get('B', 0)),
+            'C': int(bu_hours_dist.loc[bu_name].get('C', 0)),
+            'D': int(bu_hours_dist.loc[bu_name].get('D', 0)),
+            'E': int(bu_hours_dist.loc[bu_name].get('E', 0)),
+            'F': int(bu_hours_dist.loc[bu_name].get('F', 0)),
+            'total': bu_total
+        }
+
+    # =============== DEPARTMENT-WISE COMPLETION PERCENTAGE CATEGORIES ===============
+    dept_completion_pct = dept
+    dept_completion_categories = {}
+    for dept_name in dept_completion_pct.index:
+        pct = dept_completion_pct.loc[dept_name]
+        dept_completion_categories[str(dept_name)] = {
+            'completion_pct': round(pct, 1),
+            'category': categorize_completion_percentage(pct)
+        }
+
+    # =============== BU-WISE COMPLETION PERCENTAGE CATEGORIES ===============
+    bu_completion_pct = bu
+    bu_completion_categories = {}
+    for bu_name in bu_completion_pct.index:
+        pct = bu_completion_pct.loc[bu_name]
+        bu_completion_categories[str(bu_name)] = {
+            'completion_pct': round(pct, 1),
+            'category': categorize_completion_percentage(pct)
+        }
 
     return {
         "coverage": coverage,
@@ -80,6 +180,10 @@ def compute_metrics(df):
         "bu": bu,
         "dept": dept,
         "ttype": ttype,
+        "dept_hours_categories": dept_hours_categories,
+        "bu_hours_categories": bu_hours_categories,
+        "dept_completion_categories": dept_completion_categories,
+        "bu_completion_categories": bu_completion_categories
     }
 
 
@@ -87,14 +191,15 @@ def compute_metrics(df):
 def dashboard():
     df = load_data()
 
-    departments    = sorted([str(d) for d in df['Department'].dropna().unique()])
+    departments = sorted([str(d) for d in df['Department'].dropna().unique()])
     business_units = sorted([str(b) for b in df['Business Unit'].dropna().unique()])
 
     dept_filter = request.args.get('department', 'All')
-    bu_filter   = request.args.get('business_unit', 'All')
+    bu_filter = request.args.get('business_unit', 'All')
 
     if dept_filter != 'All':
         df = df[df['Department'] == dept_filter]
+
     if bu_filter != 'All':
         df = df[df['Business Unit'] == bu_filter]
 
@@ -114,31 +219,38 @@ def dashboard():
         dept_labels=list(metrics["dept"].index.astype(str)),
         dept_values=list(metrics["dept"].round(1).values),
         type_labels=list(metrics["ttype"].index.astype(str)),
-        type_values=list(metrics["ttype"].round(1).values),
+        type_values=list(metrics["ttype"].round(1).values)
     )
 
 
 @app.route("/employees")
 def employees():
     df = load_data()
-
-    departments    = sorted([str(d) for d in df['Department'].dropna().unique()])
+    departments = sorted([str(d) for d in df['Department'].dropna().unique()])
     business_units = sorted([str(b) for b in df['Business Unit'].dropna().unique()])
-
     dept_filter = request.args.get('department', 'All')
-    bu_filter   = request.args.get('business_unit', 'All')
+    bu_filter = request.args.get('business_unit', 'All')
+    hours_category = request.args.get('hours_category', 'All')
 
     if dept_filter != 'All':
         df = df[df['Department'] == dept_filter]
     if bu_filter != 'All':
         df = df[df['Business Unit'] == bu_filter]
 
+    # Aggregate by employee to remove duplicates
     agg_df = df.groupby(['Emp ID', 'Employee Name', 'Department', 'Business Unit']).agg(
         Total_Hours=('Overall Training Duration (Planned Hrs)', 'sum'),
-        Training_Count=('Training Name', 'nunique')
+        Training_Count=('Training Name', 'nunique'),
+        Course_List=('Training Name', lambda x: ', '.join(sorted(x.dropna().astype(str).unique())))
     ).reset_index()
 
+    # Re-calculate health based on total aggregated hours
     agg_df['Completed_20hrs'] = agg_df['Total_Hours'] >= 20
+    agg_df['Hours_Category'] = agg_df['Total_Hours'].apply(categorize_hours)
+
+    if hours_category and hours_category != 'All':
+        agg_df = agg_df[agg_df['Hours_Category'] == hours_category]
+
     agg_df = agg_df.sort_values(by='Total_Hours', ascending=False)
 
     try:
@@ -146,15 +258,27 @@ def employees():
     except ValueError:
         page = 1
 
-    per_page      = 50
+    per_page = 50
     total_records = len(agg_df)
-    total_pages   = (total_records + per_page - 1) // per_page
+    total_pages = (total_records + per_page - 1) // per_page
 
     start_idx = (page - 1) * per_page
-    end_idx   = start_idx + per_page
-    records   = agg_df.iloc[start_idx:end_idx].fillna("").to_dict('records')
+    end_idx = start_idx + per_page
 
+    records = agg_df.iloc[start_idx:end_idx].fillna("").to_dict('records')
+
+    # Total employees overall globally
     all_emp_count = load_data()['Emp ID'].nunique()
+
+    # Build course details per employee for modal
+    employee_courses = {}
+    detail_columns = ['Training Name', 'Overall Training Duration (Planned Hrs)', 'Training Status', 'Training Source', 'Start Date', 'End Date']
+    if all(col in df.columns for col in detail_columns):
+        for emp_id, group in df.groupby('Emp ID'):
+            employee_courses[str(emp_id)] = group[detail_columns].fillna('').to_dict('records')
+    else:
+        for emp_id, group in df.groupby('Emp ID'):
+            employee_courses[str(emp_id)] = group.to_dict('records')
 
     return render_template(
         "Employees.html",
@@ -163,10 +287,12 @@ def employees():
         business_units=business_units,
         dept_filter=dept_filter,
         bu_filter=bu_filter,
+        hours_category=hours_category,
+        employee_courses=employee_courses,
         filtered_count=total_records,
         all_count=all_emp_count,
         page=page,
-        total_pages=total_pages,
+        total_pages=total_pages
     )
 
 
@@ -174,17 +300,26 @@ def employees():
 def analytics():
     df = load_data()
 
+    # Filters
+    dept_filter = request.args.get('department', 'All')
+    bu_filter = request.args.get('business_unit', 'All')
+
+    # Custom Date Range filtering logic
     start_date = request.args.get('start_date')
-    end_date   = request.args.get('end_date')
+    end_date = request.args.get('end_date')
 
     if start_date:
         df = df[pd.to_datetime(df['Start Date'], errors='coerce') >= pd.to_datetime(start_date)]
     if end_date:
         df = df[pd.to_datetime(df['End Date'], errors='coerce') <= pd.to_datetime(end_date)]
 
-    # Monthly Trend
+    if dept_filter != 'All':
+        df = df[df['Department'] == dept_filter]
+    if bu_filter != 'All':
+        df = df[df['Business Unit'] == bu_filter]
+
+    # 1. Monthly Trend - FIX: cert rate per month should be based on unique employees, not row counts
     if 'Training Start Month' in df.columns:
-        # FIX: cert rate per month should be based on unique employees, not row counts
         monthly_emp = (
             df.groupby(['Training Start Month', 'Emp ID'])['Overall Training Duration (Planned Hrs)']
             .sum()
@@ -195,13 +330,13 @@ def analytics():
             total=('Emp ID', 'count'),
             certified=('certified', 'sum')
         ).reset_index()
-        months          = list(trend_df['Training Start Month'].astype(str))
-        trend_total     = [int(x) for x in trend_df['total'].values]
+        months = list(trend_df['Training Start Month'].astype(str))
+        trend_total = [int(x) for x in trend_df['total'].values]
         trend_certified = [int(x) for x in trend_df['certified'].values]
     else:
         months, trend_total, trend_certified = [], [], []
 
-    # Dept Cert Rates — FIX: use employee-level aggregation, not row counts
+    # 2. Dept Cert Rates — FIX: use employee-level aggregation, not row counts
     dept_emp = (
         df.groupby(['Department', 'Emp ID'])['Overall Training Duration (Planned Hrs)']
         .sum()
@@ -215,9 +350,12 @@ def analytics():
     dept_stats['cert_rate'] = (
         dept_stats['certified'] / dept_stats['total'] * 100
     ).fillna(0).round(1)
-    dept_stats  = dept_stats.sort_values(by='cert_rate', ascending=False)
+    dept_stats = dept_stats.sort_values(by='cert_rate', ascending=False)
     dept_labels = list(dept_stats['Department'].astype(str))
-    dept_rates  = [float(x) for x in dept_stats['cert_rate'].values]
+    dept_rates = [float(x) for x in dept_stats['cert_rate'].values]
+
+    # 3. Compute full metrics for categories
+    metrics = compute_metrics(df)
 
     return render_template(
         "Analytics.html",
@@ -227,6 +365,7 @@ def analytics():
         dept_labels=dept_labels,
         dept_rates=dept_rates,
         total_records=len(df),
+        metrics=metrics
     )
 
 
@@ -267,7 +406,7 @@ def chat():
 
     if gemini_plan.get("intent") == "error":
         return jsonify({
-            "query":          message,
+            "query": message,
             "final_response": (
                 gemini_plan.get("response_text")
                 or "We encountered an issue interpreting your request. Please check your GEMINI_API_KEY."
@@ -282,9 +421,9 @@ def chat():
     final_response = generate_rag_response(message, data_result, gemini_plan)
 
     return jsonify({
-        "query":          message,
-        "gemini_plan":    gemini_plan,
-        "data_result":    data_result,
+        "query": message,
+        "gemini_plan": gemini_plan,
+        "data_result": data_result,
         "final_response": final_response,
     })
 
