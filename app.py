@@ -49,8 +49,8 @@ def compute_metrics(df):
     # Department based on aggregated employee completion
     dept = emp_agg.groupby('Dept')['Completed'].mean() * 100
 
-    # Training Type (Maintained at row-level since types vary per person)
-    ttype = df.groupby('Training Type')['Completed_20hrs'].mean() * 100
+    # Training Type (Distribution of types percentages across all training)
+    ttype = (df['Training Type'].value_counts(normalize=True) * 100).round(1)
 
     return {
         "coverage": coverage,
