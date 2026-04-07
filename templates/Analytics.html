@@ -89,6 +89,9 @@
 </head>
 
 <body class="bg-background text-on-surface font-body antialiased">
+    <script id="insight-context" type="application/json">
+      {{ {"page":"analytics","start_date":request.args.get("start_date"),"end_date":request.args.get("end_date")} | tojson }}
+    </script>
     <!-- SideNavBar -->
     <aside
         class="h-screen w-64 fixed left-0 top-0 bg-slate-50 border-r border-slate-200/50 flex flex-col gap-2 p-4 z-50">
@@ -124,6 +127,7 @@
                 <div class="bg-primary w-3/4 h-full rounded-full"></div>
             </div>
             <button
+                data-generate-insight="true"
                 class="w-full py-2 bg-gradient-to-br from-primary to-primary-container text-white text-xs font-bold rounded-lg shadow-md hover:opacity-90 transition-opacity">
                 Generate Insight
             </button>
@@ -329,6 +333,16 @@
                                     <td class="px-6 py-4 text-center text-sm font-bold">{{ data['total'] }}</td>
                                 </tr>
                                 {% endfor %}
+                                <tr class="bg-slate-100 font-extrabold shadow-sm border-t-2 border-slate-300">
+                                    <td class="px-6 py-4 text-sm text-slate-900 uppercase">Grand Total</td>
+                                    <td class="px-6 py-4 text-center text-sm text-green-800 bg-green-100/50">{{ metrics.dept_hours_categories.values() | map(attribute='A') | sum }}</td>
+                                    <td class="px-6 py-4 text-center text-sm text-blue-800 bg-blue-100/50">{{ metrics.dept_hours_categories.values() | map(attribute='B') | sum }}</td>
+                                    <td class="px-6 py-4 text-center text-sm text-cyan-800 bg-cyan-100/50">{{ metrics.dept_hours_categories.values() | map(attribute='C') | sum }}</td>
+                                    <td class="px-6 py-4 text-center text-sm text-yellow-800 bg-yellow-100/50">{{ metrics.dept_hours_categories.values() | map(attribute='D') | sum }}</td>
+                                    <td class="px-6 py-4 text-center text-sm text-orange-800 bg-orange-100/50">{{ metrics.dept_hours_categories.values() | map(attribute='E') | sum }}</td>
+                                    <td class="px-6 py-4 text-center text-sm text-red-800 bg-red-100/50">{{ metrics.dept_hours_categories.values() | map(attribute='F') | sum }}</td>
+                                    <td class="px-6 py-4 text-center text-sm text-slate-800 bg-slate-200/50">{{ metrics.dept_hours_categories.values() | map(attribute='total') | sum }}</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -375,6 +389,16 @@
                                     <td class="px-6 py-4 text-center text-sm font-bold">{{ data['total'] }}</td>
                                 </tr>
                                 {% endfor %}
+                                <tr class="bg-slate-100 font-extrabold shadow-sm border-t-2 border-slate-300">
+                                    <td class="px-6 py-4 text-sm text-slate-900 uppercase">Grand Total</td>
+                                    <td class="px-6 py-4 text-center text-sm text-green-800 bg-green-100/50">{{ metrics.bu_hours_categories.values() | map(attribute='A') | sum }}</td>
+                                    <td class="px-6 py-4 text-center text-sm text-blue-800 bg-blue-100/50">{{ metrics.bu_hours_categories.values() | map(attribute='B') | sum }}</td>
+                                    <td class="px-6 py-4 text-center text-sm text-cyan-800 bg-cyan-100/50">{{ metrics.bu_hours_categories.values() | map(attribute='C') | sum }}</td>
+                                    <td class="px-6 py-4 text-center text-sm text-yellow-800 bg-yellow-100/50">{{ metrics.bu_hours_categories.values() | map(attribute='D') | sum }}</td>
+                                    <td class="px-6 py-4 text-center text-sm text-orange-800 bg-orange-100/50">{{ metrics.bu_hours_categories.values() | map(attribute='E') | sum }}</td>
+                                    <td class="px-6 py-4 text-center text-sm text-red-800 bg-red-100/50">{{ metrics.bu_hours_categories.values() | map(attribute='F') | sum }}</td>
+                                    <td class="px-6 py-4 text-center text-sm text-slate-800 bg-slate-200/50">{{ metrics.bu_hours_categories.values() | map(attribute='total') | sum }}</td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -590,7 +614,12 @@
                     for (let i = 1; i <= 6; i++) { // A through F columns (indices 0-5)
                         const count = parseInt(deptOriginalData[index][i-1]);
                         const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : '0.0';
-                        cells[i].textContent = percentage + '%';
+                        const anchor = cells[i].querySelector('a');
+                        if (anchor) {
+                            anchor.textContent = percentage + '%';
+                        } else {
+                            cells[i].textContent = percentage + '%';
+                        }
                     }
                 });
             } else {
@@ -603,7 +632,12 @@
                 rows.forEach((row, index) => {
                     const cells = row.querySelectorAll('td');
                     for (let i = 1; i <= 7; i++) { // A through F and Total columns
-                        cells[i].textContent = deptOriginalData[index][i-1];
+                        const anchor = cells[i].querySelector('a');
+                        if (anchor && i <= 6) {
+                            anchor.textContent = deptOriginalData[index][i-1];
+                        } else {
+                            cells[i].textContent = deptOriginalData[index][i-1];
+                        }
                     }
                 });
             }
@@ -632,7 +666,12 @@
                     for (let i = 1; i <= 6; i++) { // A through F columns (indices 0-5)
                         const count = parseInt(buOriginalData[index][i-1]);
                         const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : '0.0';
-                        cells[i].textContent = percentage + '%';
+                        const anchor = cells[i].querySelector('a');
+                        if (anchor) {
+                            anchor.textContent = percentage + '%';
+                        } else {
+                            cells[i].textContent = percentage + '%';
+                        }
                     }
                 });
             } else {
@@ -645,7 +684,12 @@
                 rows.forEach((row, index) => {
                     const cells = row.querySelectorAll('td');
                     for (let i = 1; i <= 7; i++) { // A through F and Total columns
-                        cells[i].textContent = buOriginalData[index][i-1];
+                        const anchor = cells[i].querySelector('a');
+                        if (anchor && i <= 6) {
+                            anchor.textContent = buOriginalData[index][i-1];
+                        } else {
+                            cells[i].textContent = buOriginalData[index][i-1];
+                        }
                     }
                 });
             }

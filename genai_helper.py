@@ -1,5 +1,7 @@
 import os
 import json
+import re
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 import google.generativeai as genai
 import pandas as pd
 import numpy as np
@@ -11,12 +13,20 @@ dotenv.load_dotenv()
 _GEMINI_API_KEY = (os.environ.get("GEMINI_API_KEY") or "").strip()
 genai.configure(api_key=_GEMINI_API_KEY)
 
+_GEMINI_EXECUTOR = ThreadPoolExecutor(max_workers=4)
+_ENABLE_GEMINI = str(os.environ.get("ENABLE_GEMINI", "0")).strip().lower() in ("1", "true", "yes", "y")
+
+def _call_with_timeout(fn, timeout_s: float):
+    future = _GEMINI_EXECUTOR.submit(fn)
+    return future.result(timeout=timeout_s)
+
 # ── RAG INDEX STATE ────────────────────────────────────────────────────────
 _RAG_INDEX = {
     "vocabulary": [],
     "vectorizer": None,
     "embeddings": None,
     "signature": None,
+    "value_to_cols": {},
 }
 
 def reset_categorical_index():
@@ -27,6 +37,7 @@ def reset_categorical_index():
         "vectorizer": None,
         "embeddings": None,
         "signature": None,
+        "value_to_cols": {},
     }
 
 def build_categorical_index(df: pd.DataFrame):
@@ -46,16 +57,17 @@ def build_categorical_index(df: pd.DataFrame):
         return
 
     _RAG_INDEX["signature"] = signature
-    all_values = set()
+    value_to_cols = {}
     for c in cols_to_index:
         if c in df.columns:
             for val in df[c].dropna().unique():
                 val_str = str(val).strip()
                 if val_str:
-                    all_values.add(val_str)
+                    value_to_cols.setdefault(val_str, set()).add(c)
 
-    vocab = list(all_values)
+    vocab = list(value_to_cols.keys())
     _RAG_INDEX["vocabulary"] = vocab
+    _RAG_INDEX["value_to_cols"] = {k: sorted(list(v)) for k, v in value_to_cols.items()}
     
     try:
         # Character n-grams correctly map semantic intent for names and buzzwords even with typos
@@ -87,6 +99,185 @@ def retrieve_relevant_categories(user_query: str, top_k=5) -> list:
         print(f"[RAG Retrieval Error] {e}")
         return []
 
+def _infer_column_for_term(term: str):
+    """Maps an indexed term back to its originating column(s)."""
+    term = str(term).strip()
+    cols = _RAG_INDEX.get("value_to_cols", {}).get(term, [])
+    priority = ["Training Name", "Training Type", "Department", "Business Unit", "Employee Name", "Designation", "Training Status", "Employee Status"]
+    for p in priority:
+        if p in cols:
+            return p
+    return cols[0] if cols else None
+
+def _fallback_query_plan(user_query: str, schema_dict: dict) -> dict:
+    """
+    Deterministic planner used when Gemini is unavailable/slow.
+    Returns a safe plan that `execute_query_plan` can run.
+    """
+    q = (user_query or "").strip()
+    ql = q.lower()
+    allowed_cols = set(schema_dict.keys())
+
+    # Basic chat/greeting handling so we don't run unnecessary data queries.
+    if ql in ("hi", "hello", "hey", "hii") or re.fullmatch(r"(hi|hello|hey)[!.?\s]*", ql):
+        return {
+            "intent": "chat",
+            "deduplicate": False,
+            "columns": [],
+            "filters": [],
+            "group_by": [],
+            "aggregation": {"column": "", "operation": "none"},
+            "sort": {"column": "", "ascending": True},
+            "limit": None,
+            "response_text": "Hello! Ask me things like: 'top departments by hours', 'who completed 20+ hours', or 'unique training names'.",
+        }
+    if "what can you do" in ql or ql in ("help", "support"):
+        return {
+            "intent": "chat",
+            "deduplicate": False,
+            "columns": [],
+            "filters": [],
+            "group_by": [],
+            "aggregation": {"column": "", "operation": "none"},
+            "sort": {"column": "", "ascending": True},
+            "limit": None,
+            "response_text": "I can answer training analytics questions using your dataset. Try: 'top 5 departments', 'average training hours', or 'unique business units'.",
+        }
+
+    # Helpers for top/bottom parsing
+    top_match = re.search(r"\btop\s+(\d+)\b", ql)
+    bottom_match = re.search(r"\bbottom\s+(\d+)\b", ql)
+    n = None
+    ascending = False
+    if top_match:
+        n = int(top_match.group(1))
+        ascending = False
+    elif bottom_match:
+        n = int(bottom_match.group(1))
+        ascending = True
+
+    def has_any(*terms: str) -> bool:
+        return any(t in ql for t in terms)
+
+    # Completion/coverage style queries -> count certified employees
+    if has_any("completed", "certified", "coverage", "completion") and "20" in ql and "emp" in ql:
+        if "Completed_20hrs" in allowed_cols and "Emp ID" in allowed_cols:
+            return {
+                "intent": "aggregation",
+                "deduplicate": False,
+                "columns": [],
+                "filters": [{"column": "Completed_20hrs", "operator": "==", "value": True}],
+                "group_by": [],
+                "aggregation": {"column": "Emp ID", "operation": "count"},
+                "sort": {"column": "", "ascending": True},
+                "limit": None,
+                "response_text": "Counting employees who completed at least 20 hours.",
+            }
+
+    # Unique / distinct lists
+    if has_any("unique", "distinct", "list all", "show unique"):
+        if "Training Name" in allowed_cols and "training name" in ql:
+            return {
+                "intent": "unique",
+                "deduplicate": True,
+                "columns": ["Training Name"],
+                "filters": [],
+                "group_by": [],
+                "aggregation": {"column": "", "operation": "none"},
+                "sort": {"column": "", "ascending": True},
+                "limit": None,
+                "response_text": "Listing unique training names.",
+            }
+        if "Department" in allowed_cols and "department" in ql:
+            return {
+                "intent": "unique",
+                "deduplicate": True,
+                "columns": ["Department"],
+                "filters": [],
+                "group_by": [],
+                "aggregation": {"column": "", "operation": "none"},
+                "sort": {"column": "", "ascending": True},
+                "limit": None,
+                "response_text": "Listing unique departments.",
+            }
+        if "Business Unit" in allowed_cols and ("business unit" in ql or "bu" in ql):
+            return {
+                "intent": "unique",
+                "deduplicate": True,
+                "columns": ["Business Unit"],
+                "filters": [],
+                "group_by": [],
+                "aggregation": {"column": "", "operation": "none"},
+                "sort": {"column": "", "ascending": True},
+                "limit": None,
+                "response_text": "Listing unique business units.",
+            }
+
+    # Top N departments / business units by total hours
+    if n is not None:
+        hours_col = "Overall Training Duration (Planned Hrs)"
+        if hours_col in allowed_cols and "Department" in allowed_cols and "department" in ql:
+            return {
+                "intent": "groupby",
+                "deduplicate": False,
+                "columns": ["Department", hours_col],
+                "filters": [],
+                "group_by": ["Department"],
+                "aggregation": {"column": hours_col, "operation": "sum"},
+                "sort": {"column": hours_col, "ascending": ascending},
+                "limit": n,
+                "response_text": "Computing total training hours by department.",
+            }
+        if hours_col in allowed_cols and "Business Unit" in allowed_cols and ("business unit" in ql or "bu" in ql):
+            return {
+                "intent": "groupby",
+                "deduplicate": False,
+                "columns": ["Business Unit", hours_col],
+                "filters": [],
+                "group_by": ["Business Unit"],
+                "aggregation": {"column": hours_col, "operation": "sum"},
+                "sort": {"column": hours_col, "ascending": ascending},
+                "limit": n,
+                "response_text": "Computing total training hours by business unit.",
+            }
+
+    # Filter-style: use local TF-IDF RAG hints to pick a column/value.
+    # This avoids hallucinated exact values and keeps results relevant.
+    hints = retrieve_relevant_categories(user_query, top_k=5)
+    if hints:
+        for term in hints:
+            col = _infer_column_for_term(term)
+            if col and col in allowed_cols:
+                # Use contains to tolerate partial matches ("sales" matches "Sales Bootcamp", etc.)
+                return {
+                    "intent": "filter",
+                    "deduplicate": False,
+                    "columns": [c for c in ["Employee Name", "Emp ID", "Department", "Business Unit", "Training Name", col, hours_col_name()] if c in allowed_cols],
+                    "filters": [{"column": col, "operator": "contains", "value": term}],
+                    "group_by": [],
+                    "aggregation": {"column": "", "operation": "none"},
+                    "sort": {"column": "Overall Training Duration (Planned Hrs)" if "Overall Training Duration (Planned Hrs)" in allowed_cols else "", "ascending": False},
+                    "limit": 25,
+                    "response_text": "Filtering records using semantic matches.",
+                }
+
+    # Default safe fallback: return a small sample
+    sample_cols = [c for c in ["Emp ID", "Employee Name", "Department", "Business Unit"] if c in allowed_cols]
+    return {
+        "intent": "filter",
+        "deduplicate": False,
+        "columns": sample_cols,
+        "filters": [],
+        "group_by": [],
+        "aggregation": {"column": "", "operation": "none"},
+        "sort": {"column": "", "ascending": True},
+        "limit": 10,
+        "response_text": "Showing a small sample of available employees.",
+    }
+
+def hours_col_name():
+    return "Overall Training Duration (Planned Hrs)"
+
 def _normalize_plan(plan: dict, schema_dict: dict) -> dict:
     """
     Normalizes a Gemini-produced plan into a safer, executor-friendly shape.
@@ -109,6 +300,25 @@ def _normalize_plan(plan: dict, schema_dict: dict) -> dict:
     allowed_cols = set(schema_dict.keys())
     normalized["columns"] = [c for c in normalized["columns"] if isinstance(c, str) and c in allowed_cols]
     normalized["group_by"] = [c for c in normalized["group_by"] if isinstance(c, str) and c in allowed_cols]
+
+    # Deduplicate while preserving order (prevents Pandas "columns are not unique" warnings).
+    seen = set()
+    dedup_cols = []
+    for c in normalized["columns"]:
+        if c in seen:
+            continue
+        seen.add(c)
+        dedup_cols.append(c)
+    normalized["columns"] = dedup_cols
+
+    seen = set()
+    dedup_group_by = []
+    for c in normalized["group_by"]:
+        if c in seen:
+            continue
+        seen.add(c)
+        dedup_group_by.append(c)
+    normalized["group_by"] = dedup_group_by
 
     cleaned_filters = []
     for f in normalized["filters"]:
@@ -157,7 +367,21 @@ def generate_query_plan(user_query: str, schema_dict: dict) -> dict:
     Uses Gemini to convert a natural language query into a structured
     pandas operation plan (JSON). Returns a parsed dict.
     """
-    prompt = f"""You are a precise data query planner for a Learning & Development Dashboard.
+    try:
+        if not _ENABLE_GEMINI or not _GEMINI_API_KEY:
+            fallback = _fallback_query_plan(user_query, schema_dict)
+            return _normalize_plan(fallback, schema_dict)
+
+        # Only build Gemini prompt (and do RAG hint retrieval) when Gemini is enabled.
+        hints = retrieve_relevant_categories(user_query)
+        hints_text = (
+            ""
+            if not hints
+            else "RAG Hints - the following exact strings exist in the DB and are semantically related to the user's intent. Do NOT hallucinate names, use these instead if they fit:\n"
+                 + str(hints)
+        )
+
+        prompt = f"""You are a precise data query planner for a Learning & Development Dashboard.
 You are given ONLY the dataset schema (column names and their data types).
 You DO NOT have access to actual data values.
 
@@ -206,7 +430,7 @@ STRICT RULES:
 Schema (column_name: dtype):
 {json.dumps(schema_dict, indent=2)}
 
-{"" if not retrieve_relevant_categories(user_query) else "RAG Hints - the following exact strings exist in the DB and are semantically related to the user's intent. Do NOT hallucinate names, use these instead if they fit:\n" + str(retrieve_relevant_categories(user_query))}
+{hints_text}
 
 User Query: "{user_query}"
 
@@ -231,42 +455,25 @@ Output JSON — return this exact structure, no extra keys:
   "response_text": "Brief natural language explanation of what this query computes."
 }}
 """
-    try:
-        if not _GEMINI_API_KEY:
-            return {
-                "intent": "error",
-                "deduplicate": False,
-                "response_text": "Missing GEMINI_API_KEY. Please set it in your environment or .env file.",
-                "columns": [],
-                "filters": [],
-                "group_by": [],
-                "aggregation": {"column": "", "operation": "none"},
-                "sort": {"column": "", "ascending": True},
-                "limit": None,
-            }
-        model = genai.GenerativeModel("gemini-2.5-flash")
-        response = model.generate_content(
-            prompt,
-            generation_config=genai.GenerationConfig(
-                response_mime_type="application/json",
-                temperature=0.0,
-            ),
-        )
+        def _do_gemini_call():
+            model = genai.GenerativeModel("gemini-2.5-flash")
+            return model.generate_content(
+                prompt,
+                generation_config=genai.GenerationConfig(
+                    response_mime_type="application/json",
+                    temperature=0.0,
+                ),
+            )
+
+        # Prevent the chatbot from hanging indefinitely.
+        response = _call_with_timeout(_do_gemini_call, timeout_s=8)
         plan = json.loads(response.text)
         return _normalize_plan(plan, schema_dict)
-    except Exception as e:
-        print(f"[Query Plan Error] {e}")
-        return {
-            "intent": "error",
-            "deduplicate": False,
-            "response_text": f"Error parsing query: {str(e)}",
-            "columns": [],
-            "filters": [],
-            "group_by": [],
-            "aggregation": {"column": "", "operation": "none"},
-            "sort": {"column": "", "ascending": True},
-            "limit": None,
-        }
+    except (FuturesTimeoutError, Exception) as e:
+        err_msg = f"{type(e).__name__}: {e}" if str(e) else type(e).__name__
+        print(f"[Query Plan Error/Fallback] {err_msg}")
+        fallback = _fallback_query_plan(user_query, schema_dict)
+        return _normalize_plan(fallback, schema_dict)
 
 
 def execute_query_plan(df: pd.DataFrame, plan: dict) -> list:
@@ -354,7 +561,10 @@ def execute_query_plan(df: pd.DataFrame, plan: dict) -> list:
                 numeric_series = pd.to_numeric(series, errors="coerce")
                 agg_value = round(float(numeric_series.mean()), 2)
             else:
-                agg_value = int(series.notna().sum())
+                if agg_col == "Emp ID":
+                    agg_value = int(series.nunique(dropna=True))
+                else:
+                    agg_value = int(series.notna().sum())
             # Return immediately — column-select below would wipe this
             return [{agg_col: agg_value}]
 
@@ -367,7 +577,11 @@ def execute_query_plan(df: pd.DataFrame, plan: dict) -> list:
                 result[agg_col] = pd.to_numeric(result[agg_col], errors="coerce")
                 result = result.groupby(group_by_cols)[agg_col].mean().round(2).reset_index()
             elif agg_op == "count":
-                result = result.groupby(group_by_cols)[agg_col].apply(lambda s: int(s.notna().sum())).reset_index(name=agg_col)
+                def _count_fn(s):
+                    if agg_col == "Emp ID":
+                        return int(s.nunique(dropna=True))
+                    return int(s.notna().sum())
+                result = result.groupby(group_by_cols)[agg_col].apply(_count_fn).reset_index(name=agg_col)
 
         # ── Step 5: COLUMN SELECTION (filter / top_n / summary) ───────────────
         else:
@@ -449,27 +663,37 @@ def generate_rag_response(user_query: str, data_result: list, plan: dict) -> str
                 + "\n".join(f"• {item}" for item in items if item)
             )
 
-    # ── SMALL RESULTS: use Gemini RAG for a natural language answer ───────────
-    prompt = f"""You are a helpful analytics assistant for a Learning & Development Dashboard.
-The user asked a question. We queried the dataset and retrieved the result below.
+    # ── SMALL RESULTS: deterministic summary (no LLM) ─────────────────────────
+    cols = list(data_result[0].keys()) if data_result else []
+    primary_col = None
+    if intent == "groupby":
+        gb = plan.get("group_by", [])
+        if isinstance(gb, list) and gb:
+            primary_col = gb[0] if gb[0] in cols else None
+    if intent == "filter":
+        fs = plan.get("filters", [])
+        if isinstance(fs, list) and fs:
+            cand = fs[0].get("column")
+            if isinstance(cand, str) and cand in cols:
+                primary_col = cand
+    if intent == "unique" or plan.get("deduplicate") is True:
+        ucols = plan.get("columns", [])
+        if isinstance(ucols, list) and ucols:
+            cand = ucols[0]
+            if isinstance(cand, str) and cand in cols:
+                primary_col = cand
+    if primary_col is None and cols:
+        primary_col = cols[0]
+    if primary_col:
+        items = []
+        for row in data_result:
+            v = row.get(primary_col, "")
+            if v is None:
+                continue
+            v = str(v).strip()
+            if v:
+                items.append(v)
+        preview = ", ".join(items[:10])
+        return f"Found **{len(items)}** results for **{primary_col}**. Preview: {preview}"
 
-User Question: "{user_query}"
-Query Summary: {plan.get("response_text", "")}
-
-Data Result (JSON):
-{json.dumps(data_result, indent=2)}
-
-Instructions:
-- Answer the user's question directly and conversationally.
-- Use ONLY the numbers and values from the data above. Do NOT invent any figures.
-- Be concise. Do not output raw JSON or markdown tables.
-- If the result is a single number, state it clearly with helpful context.
-- If the result has multiple rows, summarize the key highlights.
-"""
-    try:
-        model = genai.GenerativeModel("gemini-2.5-flash")
-        response = model.generate_content(prompt)
-        return response.text.strip()
-    except Exception as e:
-        print(f"[RAG Error] {e}")
-        return "Here is the data: " + json.dumps(data_result)
+    return f"Found **{len(data_result)}** results."

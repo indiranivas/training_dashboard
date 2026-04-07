@@ -57,6 +57,9 @@
 </head>
 
 <body class="bg-background text-slate-800 font-body antialiased">
+    <script id="insight-context" type="application/json">
+      {{ {"page":"dashboard","department":dept_filter,"business_unit":bu_filter} | tojson }}
+    </script>
     <!-- Sidebar Navigation -->
     <aside
         class="h-screen w-64 fixed left-0 top-0 bg-slate-50 border-r border-slate-200/50 flex flex-col gap-2 p-4 z-50">
@@ -86,6 +89,7 @@
         </nav>
         <div class="mt-auto p-2">
             <button
+                data-generate-insight="true"
                 class="w-full py-3 px-4 bg-gradient-to-br from-primary to-blue-600 text-white rounded-xl font-semibold text-sm shadow-lg hover:opacity-90 transition-all flex items-center justify-center gap-2">
                 <span class="material-symbols-outlined text-sm">auto_awesome</span>
                 Generate Insight

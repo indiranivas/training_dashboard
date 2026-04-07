@@ -54,7 +54,168 @@
     </button>
 </div>
 
+<!-- Insight Modal -->
+<div id="insight-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-900/50 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+    <div class="bg-white rounded-2xl shadow-2xl w-[90%] max-w-lg overflow-hidden transform scale-95 transition-transform duration-300">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-primary to-blue-700 p-4 text-white flex justify-between items-center shadow-md">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                    <span class="material-symbols-outlined text-sm">insights</span>
+                </div>
+                <h3 class="font-bold text-sm leading-tight">AI Insight</h3>
+            </div>
+            <button onclick="closeInsightModal()" class="p-1.5 hover:bg-white/20 rounded-lg transition-colors flex items-center justify-center">
+                <span class="material-symbols-outlined text-sm">close</span>
+            </button>
+        </div>
+        <!-- Body -->
+        <div id="insight-modal-body" class="p-6 max-h-[60vh] overflow-y-auto prose prose-sm prose-slate max-w-none text-slate-700 leading-snug prose-li:my-0.5 prose-p:my-1 prose-strong:text-blue-900">
+        </div>
+    </div>
+</div>
+
 <script>
+    function openInsightModal() {
+        const modal = document.getElementById('insight-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            modal.classList.add('opacity-100');
+            modal.firstElementChild.classList.remove('scale-95');
+            modal.firstElementChild.classList.add('scale-100');
+        }, 10);
+    }
+
+    function closeInsightModal() {
+        const modal = document.getElementById('insight-modal');
+        modal.classList.remove('opacity-100');
+        modal.classList.add('opacity-0');
+        modal.firstElementChild.classList.remove('scale-100');
+        modal.firstElementChild.classList.add('scale-95');
+        setTimeout(() => {
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }, 300);
+    }
+
+    function openChatbotIfClosed() {
+        const windowEl = document.getElementById('chatbot-window');
+        if (!windowEl) return;
+        if (windowEl.classList.contains('hidden')) {
+            toggleChatbot();
+        }
+    }
+
+    function appendBotMessage(rawText) {
+        const chatArea = document.querySelector('#chatbot-window .overflow-y-auto');
+        if (!chatArea) return;
+
+        let formattedText = rawText || '';
+        if (typeof marked !== 'undefined') {
+            formattedText = marked.parse(formattedText);
+        } else {
+            formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            formattedText = formattedText.replace(/\n\n/g, '<br><br>');
+            formattedText = formattedText.replace(/\n/g, '<br>');
+        }
+
+        const aiMsg = document.createElement('div');
+        aiMsg.className = 'flex items-start gap-2 max-w-[95%]';
+        aiMsg.innerHTML = `
+            <div class="w-6 h-6 rounded-full bg-gradient-to-r from-primary to-blue-600 flex items-center justify-center shrink-0 mt-1">
+                <span class="material-symbols-outlined text-white text-[12px]">smart_toy</span>
+            </div>
+            <div class="bg-white border border-slate-200 text-slate-700 px-3 py-2.5 rounded-2xl rounded-tl-sm text-sm shadow-sm">
+                <div class="prose prose-sm prose-slate max-w-none text-slate-700 leading-snug prose-li:my-0.5 prose-p:my-1 prose-strong:text-blue-900">${formattedText}</div>
+            </div>
+        `;
+        chatArea.appendChild(aiMsg);
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    function appendTypingIndicator() {
+        const chatArea = document.querySelector('#chatbot-window .overflow-y-auto');
+        if (!chatArea) return null;
+        const el = document.createElement('div');
+        el.className = 'flex items-start gap-2 max-w-[85%]';
+        el.innerHTML = `
+            <div class="w-6 h-6 rounded-full bg-gradient-to-r from-primary to-blue-600 flex items-center justify-center shrink-0 mt-1">
+                <span class="material-symbols-outlined text-white text-[12px]">smart_toy</span>
+            </div>
+            <div class="bg-white border border-slate-200 text-slate-700 px-3 py-2.5 rounded-2xl rounded-tl-sm text-sm shadow-sm flex items-center gap-1">
+                <span class="inline-block w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></span>
+                <span class="inline-block w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></span>
+                <span class="inline-block w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
+            </div>
+        `;
+        chatArea.appendChild(el);
+        chatArea.scrollTop = chatArea.scrollHeight;
+        return el;
+    }
+
+    async function generateInsight(context) {
+        openInsightModal();
+        const bodyEl = document.getElementById('insight-modal-body');
+        bodyEl.innerHTML = `
+            <div class="flex flex-col items-center justify-center py-8">
+                <div class="flex items-center gap-1 mb-3">
+                    <span class="inline-block w-2.5 h-2.5 bg-primary rounded-full animate-bounce"></span>
+                    <span class="inline-block w-2.5 h-2.5 bg-primary rounded-full animate-bounce" style="animation-delay: 0.1s"></span>
+                    <span class="inline-block w-2.5 h-2.5 bg-primary rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
+                </div>
+                <p class="text-sm text-slate-500 font-medium animate-pulse">Analyzing data & generating insight...</p>
+            </div>
+        `;
+
+        try {
+            const response = await fetch('/api/insight', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ context: context || {} })
+            });
+            const data = await response.json();
+            
+            let rawText = data.insight || 'No insight available.';
+            let formattedText = rawText;
+            if (typeof marked !== 'undefined') {
+                formattedText = marked.parse(rawText);
+            } else {
+                formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                formattedText = formattedText.replace(/\n\n/g, '<br><br>');
+                formattedText = formattedText.replace(/\n/g, '<br>');
+            }
+            bodyEl.innerHTML = formattedText;
+        } catch (e) {
+            bodyEl.innerHTML = `
+                <div class="flex items-start gap-2 bg-red-50 p-4 border border-red-200 rounded-xl">
+                    <span class="material-symbols-outlined text-red-500 text-lg">error</span>
+                    <p class="text-sm text-red-700">Could not generate insight. Please ensure the backend is running.</p>
+                </div>
+            `;
+            console.error('Insight error:', e);
+        }
+    }
+
+    function collectInsightContext() {
+        const el = document.getElementById('insight-context');
+        if (!el) return {};
+        try {
+            return JSON.parse(el.textContent || '{}');
+        } catch {
+            return {};
+        }
+    }
+
+    function wireGenerateInsightButtons() {
+        document.querySelectorAll('[data-generate-insight="true"]').forEach(btn => {
+            if (btn.dataset.wired === '1') return;
+            btn.dataset.wired = '1';
+            btn.addEventListener('click', () => generateInsight(collectInsightContext()));
+        });
+    }
+
     function toggleChatbot() {
         const windowEl = document.getElementById('chatbot-window');
         const isHidden = windowEl.classList.contains('hidden');
@@ -209,4 +370,7 @@
         
         chatArea.scrollTop = chatArea.scrollHeight;
     }
+
+    // Auto-wire on load
+    document.addEventListener('DOMContentLoaded', wireGenerateInsightButtons);
 </script>

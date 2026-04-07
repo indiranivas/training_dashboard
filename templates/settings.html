@@ -91,6 +91,9 @@
 </head>
 
 <body class="bg-background text-on-surface">
+    <script id="insight-context" type="application/json">
+      {{ {"page":"settings"} | tojson }}
+    </script>
     <!-- SideNavBar (Shared Component) -->
     <aside
         class="h-screen w-64 fixed left-0 top-0 bg-slate-50 dark:bg-slate-950 flex flex-col gap-2 p-4 border-r border-slate-200/50 dark:border-slate-800/50 font-inter text-sm tracking-tight">
@@ -122,6 +125,7 @@
         </nav>
         <div class="mt-auto pt-4 border-t border-slate-200/50">
             <button
+                data-generate-insight="true"
                 class="w-full py-3 px-4 rounded-xl bg-gradient-to-br from-primary to-primary-container text-white font-semibold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all active:opacity-80">
                 <span class="material-symbols-outlined text-sm" data-icon="auto_awesome">auto_awesome</span>
                 Generate Insight
