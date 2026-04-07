@@ -6,7 +6,6 @@ import os
 from routes.dashboard import dashboard_bp
 from routes.employees import employees_bp
 from routes.analytics import analytics_bp
-from routes.settings import settings_bp
 from routes.api import api_bp
 
 app = Flask(__name__)
@@ -18,7 +17,6 @@ app.jinja_env.filters['urlencode'] = lambda value: quote_plus(str(value))
 app.register_blueprint(dashboard_bp)
 app.register_blueprint(employees_bp)
 app.register_blueprint(analytics_bp)
-app.register_blueprint(settings_bp)
 app.register_blueprint(api_bp)
 
 if __name__ == "__main__":
