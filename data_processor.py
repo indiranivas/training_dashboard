@@ -1,14 +1,118 @@
 import os
+import re
+import json
 import pandas as pd
 from genai_helper import build_categorical_index, reset_categorical_index
 
-_DATA_CACHE = {"mtime": None, "df": None, "source": None}
+CONFIG_FILE = os.path.join(os.path.dirname(__file__), "data_config.json")
+DATA_DIR = os.path.join(os.path.dirname(__file__), "data_files")
+_DATA_CACHE = {}
 
-def load_data():
-    base_dir = os.path.dirname(__file__)
-    xlsx_path = os.path.join(base_dir, "data.xlsx")
-    csv_path = os.path.join(base_dir, "data.csv")
+def get_config():
+    if os.path.exists(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE, 'r') as f:
+                data = json.load(f)
+                
+                # Migrate older schema to new schema dynamically if needed
+                if "active_year" in data and "years" not in data:
+                    migrated = {"years": {}}
+                    act_yr = data.get("active_year")
+                    if act_yr:
+                        migrated["years"][act_yr] = {"link": None, "active": 1}
+                    links = data.get("live_links", {})
+                    for y, l in links.items():
+                        if y not in migrated["years"]:
+                            migrated["years"][y] = {"link": l, "active": 0}
+                        else:
+                            migrated["years"][y]["link"] = l
+                    return migrated
+                return data
+        except Exception:
+            pass
+    return {"years": {}}
 
+def save_config(config_data):
+    with open(CONFIG_FILE, 'w') as f:
+        json.dump(config_data, f, indent=4)
+
+def get_active_year():
+    config = get_config()
+    for y, info in config.get("years", {}).items():
+        if info.get("active") == 1:
+            return str(y)
+    return None
+
+def set_active_year(year):
+    config = get_config()
+    if "years" not in config: config["years"] = {}
+    if str(year) not in config["years"]:
+        config["years"][str(year)] = {"link": None, "active": 1}
+        
+    for y in config["years"]:
+        config["years"][y]["active"] = 1 if str(y) == str(year) else 0
+    save_config(config)
+
+def get_live_link(year):
+    return get_config().get("years", {}).get(str(year), {}).get("link")
+
+def set_live_link(year, link):
+    config = get_config()
+    if "years" not in config: config["years"] = {}
+    if str(year) not in config["years"]:
+        config["years"][str(year)] = {"link": None, "active": 0}
+    config["years"][str(year)]["link"] = link.strip()
+    save_config(config)
+
+def list_available_years():
+    if not os.path.exists(DATA_DIR):
+        return []
+
+    years = set()
+    for filename in os.listdir(DATA_DIR):
+        match = re.match(r"^data_(\d{4})\.(csv|xlsx|xls)$", filename, re.IGNORECASE)
+        if match:
+            years.add(match.group(1))
+    return sorted(years, reverse=True)
+
+def _resolve_dataset_paths(year=None):
+    if year:
+        return (
+            os.path.join(DATA_DIR, f"data_{year}.xlsx"),
+            os.path.join(DATA_DIR, f"data_{year}.csv"),
+        )
+    return (
+        os.path.join(DATA_DIR, "data.xlsx"),
+        os.path.join(DATA_DIR, "data.csv"),
+    )
+
+def _normalize_dataframe(df, build_index=False):
+    if df is None:
+        return pd.DataFrame()
+
+    df = df.copy()
+    df.columns = [str(col).strip() for col in df.columns]
+
+    for col in ['Department', 'Business Unit', 'Training Type', 'Training Status', 'Employee Status', 'Quarter', 'Designation', 'Training Source', 'Trainer Name', 'Training Name', 'Employee Name']:
+        if col in df.columns:
+            df[col] = df[col].fillna('').astype(str).str.strip()
+
+    if 'Overall Training Duration (Planned Hrs)' in df.columns:
+        df['Overall Training Duration (Planned Hrs)'] = pd.to_numeric(
+            df['Overall Training Duration (Planned Hrs)'], errors='coerce'
+        )
+
+    if 'Emp ID' in df.columns and 'Overall Training Duration (Planned Hrs)' in df.columns:
+        emp_totals = df.groupby('Emp ID')['Overall Training Duration (Planned Hrs)'].transform('sum')
+        df['Completed_20hrs'] = emp_totals >= 20
+
+    if build_index:
+        reset_categorical_index()
+        build_categorical_index(df)
+
+    return df
+
+def _read_dataset(xlsx_path, csv_path):
     xlsx_mtime = None
     csv_mtime = None
     try:
@@ -20,11 +124,6 @@ def load_data():
     except OSError:
         pass
 
-    if _DATA_CACHE["df"] is not None and _DATA_CACHE.get("source") == "xlsx" and _DATA_CACHE.get("mtime") == xlsx_mtime:
-        return _DATA_CACHE["df"]
-    if _DATA_CACHE["df"] is not None and _DATA_CACHE.get("source") == "csv" and _DATA_CACHE.get("mtime") == csv_mtime:
-        return _DATA_CACHE["df"]
-
     df = None
     loaded_source = None
     mtime = None
@@ -35,42 +134,86 @@ def load_data():
         df = pd.read_excel(xlsx_path)
         loaded_source = "xlsx"
         mtime = xlsx_mtime
-    except PermissionError:
-        if csv_mtime is None:
-            raise
-        df = pd.read_csv(csv_path)
-        loaded_source = "csv"
-        mtime = csv_mtime
-    except ValueError:
-        if csv_mtime is None:
-            raise
-        df = pd.read_csv(csv_path)
-        loaded_source = "csv"
-        mtime = csv_mtime
+    except FileNotFoundError:
+        if csv_mtime is not None:
+            df = pd.read_csv(csv_path)
+            loaded_source = "csv"
+            mtime = csv_mtime
+    except (PermissionError, ValueError):
+        if csv_mtime is not None:
+            df = pd.read_csv(csv_path)
+            loaded_source = "csv"
+            mtime = csv_mtime
 
+    return df, loaded_source, mtime, xlsx_mtime, csv_mtime
+
+def _get_file_mtimes(xlsx_path, csv_path):
+    xlsx_mtime = None
+    csv_mtime = None
+    try:
+        xlsx_mtime = os.path.getmtime(xlsx_path)
+    except OSError:
+        pass
+    try:
+        csv_mtime = os.path.getmtime(csv_path)
+    except OSError:
+        pass
+    return xlsx_mtime, csv_mtime
+
+def load_data_for_year(year, build_index=False):
+    year = str(year).strip()
+    cache_key = f"year:{year}"
+    xlsx_path, csv_path = _resolve_dataset_paths(year)
+    xlsx_mtime, csv_mtime = _get_file_mtimes(xlsx_path, csv_path)
+
+    cached = _DATA_CACHE.get(cache_key)
+    if cached is not None:
+        if cached.get("source") == "xlsx" and cached.get("mtime") == xlsx_mtime and xlsx_mtime is not None:
+            if build_index:
+                reset_categorical_index()
+                build_categorical_index(cached["df"])
+            return cached["df"]
+        if cached.get("source") == "csv" and cached.get("mtime") == csv_mtime and csv_mtime is not None:
+            if build_index:
+                reset_categorical_index()
+                build_categorical_index(cached["df"])
+            return cached["df"]
+
+    df, loaded_source, mtime, xlsx_mtime, csv_mtime = _read_dataset(xlsx_path, csv_path)
     if df is None or loaded_source is None:
-        raise FileNotFoundError(f"Missing dataset file: {xlsx_path} or {csv_path}")
-    df.columns = [col.strip() for col in df.columns]
+        return pd.DataFrame()
 
-    if 'Department' in df.columns:
-        df['Department'] = df['Department'].fillna('').astype(str).str.strip()
-    if 'Business Unit' in df.columns:
-        df['Business Unit'] = df['Business Unit'].fillna('').astype(str).str.strip()
+    normalized_df = _normalize_dataframe(df, build_index=build_index)
+    _DATA_CACHE[cache_key] = {"source": loaded_source, "mtime": mtime, "df": normalized_df}
+    return normalized_df
 
-    if 'Overall Training Duration (Planned Hrs)' in df.columns:
-        df['Overall Training Duration (Planned Hrs)'] = pd.to_numeric(
-            df['Overall Training Duration (Planned Hrs)'], errors='coerce'
-        )
-        emp_totals = df.groupby('Emp ID')['Overall Training Duration (Planned Hrs)'].transform('sum')
-        df['Completed_20hrs'] = emp_totals >= 20
+def load_data():
+    active_year = get_active_year()
+    if active_year:
+        return load_data_for_year(active_year, build_index=True)
 
-    reset_categorical_index()
-    build_categorical_index(df)
+    cache_key = "default"
+    xlsx_path, csv_path = _resolve_dataset_paths()
+    xlsx_mtime, csv_mtime = _get_file_mtimes(xlsx_path, csv_path)
 
-    _DATA_CACHE["source"] = loaded_source
-    _DATA_CACHE["mtime"] = mtime
-    _DATA_CACHE["df"] = df
-    return _DATA_CACHE["df"]
+    cached = _DATA_CACHE.get(cache_key)
+    if cached is not None:
+        if cached.get("source") == "xlsx" and cached.get("mtime") == xlsx_mtime and xlsx_mtime is not None:
+            reset_categorical_index()
+            build_categorical_index(cached["df"])
+            return cached["df"]
+        if cached.get("source") == "csv" and cached.get("mtime") == csv_mtime and csv_mtime is not None:
+            reset_categorical_index()
+            build_categorical_index(cached["df"])
+            return cached["df"]
+
+    df, loaded_source, mtime, xlsx_mtime, csv_mtime = _read_dataset(xlsx_path, csv_path)
+    if df is None or loaded_source is None:
+        return pd.DataFrame()
+
+    normalized_df = _normalize_dataframe(df, build_index=True)
+    _DATA_CACHE[cache_key] = {"source": loaded_source, "mtime": mtime, "df": normalized_df}
+    return normalized_df
 
 
 def categorize_hours(hours):
@@ -112,6 +255,7 @@ def compute_metrics(df):
         return {
             "coverage": 0, "avg_hours": 0, "completion_rate": 0, "total_emp": 0,
             "bu": pd.Series(dtype=float), "dept": pd.Series(dtype=float), "ttype": pd.Series(dtype=float),
+            "ttype_20hrs": pd.Series(dtype=float),
             "dept_hours_categories": {}, "bu_hours_categories": {},
             "dept_completion_categories": {}, "bu_completion_categories": {}
         }
@@ -140,6 +284,14 @@ def compute_metrics(df):
     bu = emp_agg.groupby('BU')['Completed'].mean() * 100
     dept = emp_agg.groupby('Dept')['Completed'].mean() * 100
     ttype = (df['Training Type'].value_counts(normalize=True) * 100).round(1) if 'Training Type' in df.columns else pd.Series(dtype=float)
+    if 'Training Type' in df.columns and 'Overall Training Duration (Planned Hrs)' in df.columns:
+        ttype_20hrs = (
+            df[df['Overall Training Duration (Planned Hrs)'] >= 20]
+            ['Training Type']
+            .value_counts(normalize=True) * 100
+        ).round(1)
+    else:
+        ttype_20hrs = pd.Series(dtype=float)
 
     emp_agg['Hours_Category'] = emp_agg['Total_Hours'].apply(categorize_hours)
     
@@ -197,6 +349,7 @@ def compute_metrics(df):
         "bu": bu,
         "dept": dept,
         "ttype": ttype,
+        "ttype_20hrs": ttype_20hrs,
         "dept_hours_categories": dept_hours_categories,
         "bu_hours_categories": bu_hours_categories,
         "dept_completion_categories": dept_completion_categories,

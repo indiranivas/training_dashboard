@@ -35,5 +35,7 @@ def dashboard():
         dept_labels=list(metrics["dept"].index.astype(str)),
         dept_values=list(metrics["dept"].round(1).values),
         type_labels=list(metrics["ttype"].index.astype(str)),
-        type_values=list(metrics["ttype"].round(1).values)
+        type_values=list(metrics["ttype"].round(1).values),
+        type20_labels=list(metrics["ttype_20hrs"].index.astype(str)),
+        type20_values=list(metrics["ttype_20hrs"].round(1).values)
     )

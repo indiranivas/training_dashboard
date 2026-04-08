@@ -38,18 +38,32 @@
                 </button>
             </form>
             <div class="relative">
-                <button class="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-sm transition-colors group">
+                <button id="exportBtn" class="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-sm transition-colors group">
                     <span class="material-symbols-outlined text-sm group-hover:-translate-y-0.5 transition-transform">download</span>
                     Export Data
                 </button>
+                <div id="exportMenu" class="hidden absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
+                    <button onclick="exportToCSV()" class="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-b border-slate-100">
+                        <span class="material-symbols-outlined text-sm">table_chart</span>
+                        Export as CSV
+                    </button>
+                    <button onclick="exportToExcel()" class="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-b border-slate-100">
+                        <span class="material-symbols-outlined text-sm">description</span>
+                        Export as Excel
+                    </button>
+                    <button onclick="exportToPDF()" class="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">picture_as_pdf</span>
+                        Export as PDF
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Bento Grid Layout -->
     <div class="grid grid-cols-12 gap-6">
-        <!-- Main Trend Chart (Wide) -->
-        <div class="col-span-12 lg:col-span-8 bg-white p-6 rounded-2xl border border-slate-100 shadow-soft relative overflow-hidden group hover:shadow-md transition-shadow">
+        <!-- Main Trend Chart (Full Width) -->
+        <div class="col-span-12 bg-white p-6 rounded-2xl border border-slate-100 shadow-soft relative overflow-hidden group hover:shadow-md transition-shadow">
             <div class="absolute -right-10 -top-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors"></div>
             <div class="flex justify-between items-center mb-8 relative z-10">
                 <div>
@@ -72,42 +86,7 @@
             </div>
         </div>
 
-        <!-- Skill Gap Heatmap (Compact) -->
-        <div class="col-span-12 lg:col-span-4 bg-white p-6 rounded-2xl border border-slate-100 shadow-soft">
-            <div class="mb-5">
-                <h4 class="text-sm font-black text-slate-800 uppercase tracking-wider">Critical Skill Gaps</h4>
-                <p class="text-xs text-slate-500 mt-1">Competency density by seniority.</p>
-            </div>
-            <!-- Mock Heatmap -->
-            <div class="grid grid-cols-5 gap-1.5 h-48">
-                <!-- Heatmap Cells -->
-                <div class="bg-primary/10 rounded-md hover:bg-primary/20 transition-colors cursor-pointer"></div>
-                <div class="bg-primary/20 rounded-md hover:bg-primary/30 transition-colors cursor-pointer"></div>
-                <div class="bg-primary/40 rounded-md hover:bg-primary/50 transition-colors cursor-pointer"></div>
-                <div class="bg-primary/10 rounded-md hover:bg-primary/20 transition-colors cursor-pointer"></div>
-                <div class="bg-primary/10 rounded-md hover:bg-primary/20 transition-colors cursor-pointer"></div>
-                <div class="bg-primary/20 rounded-md hover:bg-primary/30 transition-colors cursor-pointer"></div>
-                <div class="bg-primary/60 rounded-md hover:bg-primary/70 transition-colors cursor-pointer"></div>
-                <div class="bg-primary/80 rounded-md hover:bg-primary/90 transition-colors cursor-pointer"></div>
-                <div class="bg-primary/40 rounded-md hover:bg-primary/50 transition-colors cursor-pointer"></div>
-                <div class="bg-primary/20 rounded-md hover:bg-primary/30 transition-colors cursor-pointer"></div>
-                <div class="bg-primary/30 rounded-md hover:bg-primary/40 transition-colors cursor-pointer"></div>
-                <div class="bg-primary/90 rounded-md hover:bg-primary transition-colors cursor-pointer"></div>
-                <div class="bg-primary rounded-md opacity-90 hover:opacity-100 transition-opacity cursor-pointer"></div>
-                <div class="bg-primary/70 rounded-md hover:bg-primary/80 transition-colors cursor-pointer"></div>
-                <div class="bg-primary/30 rounded-md hover:bg-primary/40 transition-colors cursor-pointer"></div>
-                <div class="bg-primary/10 rounded-md hover:bg-primary/20 transition-colors cursor-pointer"></div>
-                <div class="bg-primary/40 rounded-md hover:bg-primary/50 transition-colors cursor-pointer"></div>
-                <div class="bg-primary/60 rounded-md hover:bg-primary/70 transition-colors cursor-pointer"></div>
-                <div class="bg-primary/30 rounded-md hover:bg-primary/40 transition-colors cursor-pointer"></div>
-                <div class="bg-primary/10 rounded-md hover:bg-primary/20 transition-colors cursor-pointer"></div>
-            </div>
-            <div class="mt-4 flex justify-between items-center">
-                <span class="text-[10px] font-bold text-primary/40">Low Risk</span>
-                <div class="h-2 flex-1 mx-4 bg-gradient-to-r from-primary/10 to-primary rounded-full"></div>
-                <span class="text-[10px] font-bold text-primary">High Risk</span>
-            </div>
-        </div>
+
 
         <!-- Department-wise Progress (Stacked Bars) -->
         <div class="col-span-12 lg:col-span-12 bg-white p-8 rounded-2xl border border-slate-100 shadow-soft">
@@ -232,34 +211,25 @@
         </div>
 
         <!-- System Integrations Footer Panel -->
-        <div class="col-span-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-soft hover:-translate-y-1 transition-transform cursor-pointer flex items-center gap-5 group">
+        <div class="col-span-12 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <button onclick="exportToPDF()" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-soft hover:-translate-y-1 transition-transform cursor-pointer flex items-center gap-5 group">
                 <div class="w-14 h-14 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center group-hover:bg-rose-500 group-hover:text-white transition-colors">
-                    <span class="material-symbols-outlined text-2xl">description</span>
+                    <span class="material-symbols-outlined text-2xl">picture_as_pdf</span>
                 </div>
                 <div>
                     <p class="text-sm font-bold text-slate-800">Generate PDF</p>
-                    <p class="text-xs text-slate-500 mt-1">Visual summaries for execs</p>
+                    <p class="text-xs text-slate-500 mt-1">Download visual report</p>
                 </div>
-            </div>
-            <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-soft hover:-translate-y-1 transition-transform cursor-pointer flex items-center gap-5 group">
+            </button>
+            <button onclick="exportToExcel()" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-soft hover:-translate-y-1 transition-transform cursor-pointer flex items-center gap-5 group">
                 <div class="w-14 h-14 bg-emerald-50 text-emerald-500 rounded-xl flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-colors">
                     <span class="material-symbols-outlined text-2xl">table_chart</span>
                 </div>
                 <div>
-                    <p class="text-sm font-bold text-slate-800">Export Raw CSV</p>
-                    <p class="text-xs text-slate-500 mt-1">Granular dataset for BI</p>
+                    <p class="text-sm font-bold text-slate-800">Export to Excel</p>
+                    <p class="text-xs text-slate-500 mt-1">Detailed dataset for analysis</p>
                 </div>
-            </div>
-            <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-soft hover:-translate-y-1 transition-transform cursor-pointer flex items-center gap-5 group">
-                <div class="w-14 h-14 bg-primary/10 text-primary rounded-xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
-                    <span class="material-symbols-outlined text-2xl">cloud_sync</span>
-                </div>
-                <div>
-                    <p class="text-sm font-bold text-slate-800">HRMS Webhook Sync</p>
-                    <p class="text-xs text-slate-500 mt-1">Push to external systems</p>
-                </div>
-            </div>
+            </button>
         </div>
     </div>
 </div>
@@ -451,6 +421,82 @@
         if (buCurrentMode === mode) return;
         buCurrentMode = mode;
         toggleTableDisplay('bu-hours-table', buOriginalData, mode, 'bu-count-btn', 'bu-percentage-btn');
+    }
+
+    // Export Functions
+    document.getElementById('exportBtn').addEventListener('click', function() {
+        const menu = document.getElementById('exportMenu');
+        menu.classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', function(event) {
+        const exportBtn = document.getElementById('exportBtn');
+        const exportMenu = document.getElementById('exportMenu');
+        if (!exportBtn.contains(event.target) && !exportMenu.contains(event.target)) {
+            exportMenu.classList.add('hidden');
+        }
+    });
+
+    async function exportToCSV() {
+        try {
+            const response = await fetch('/api/export/csv?{{ request.query_string.decode() }}');
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `analytics_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } catch (error) {
+            console.error('CSV export failed:', error);
+            alert('Failed to export CSV');
+        }
+    }
+
+    async function exportToExcel() {
+        try {
+            const response = await fetch('/api/export/excel?{{ request.query_string.decode() }}');
+            if (!response.ok) {
+                let message = 'Failed to export Excel file';
+                try {
+                    const data = await response.json();
+                    message = data.error || message;
+                } catch (_) {}
+                throw new Error(message);
+            }
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `analytics_${new Date().toISOString().split('T')[0]}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } catch (error) {
+            console.error('Excel export failed:', error);
+            alert(error.message || 'Failed to export Excel file');
+        }
+    }
+
+    async function exportToPDF() {
+        try {
+            const response = await fetch('/api/export/pdf?{{ request.query_string.decode() }}');
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `analytics_${new Date().toISOString().split('T')[0]}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        } catch (error) {
+            console.error('PDF export failed:', error);
+            alert('Failed to export PDF');
+        }
     }
 </script>
 {% endblock %}

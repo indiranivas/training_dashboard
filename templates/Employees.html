@@ -41,17 +41,22 @@
     <!-- Filters Section -->
     <div class="grid grid-cols-12 gap-4">
         <!-- Business Unit Quick Filter -->
-        <div class="col-span-12 lg:col-span-8 bg-white p-2 rounded-xl border border-slate-100 shadow-soft flex gap-2 overflow-x-auto">
-            <a href="/employees?department=All&business_unit=All&hours_category=All"
+        <div class="col-span-12 lg:col-span-5 bg-white p-2 rounded-xl border border-slate-100 shadow-soft flex gap-2 overflow-x-auto">
+            <a href="/employees?department=All&business_unit=All&hours_category=All&search_query={{ search_query|urlencode }}"
                 class="px-4 py-2 rounded-lg text-sm font-bold shadow-sm whitespace-nowrap transition-colors {% if bu_filter == 'All' %}bg-primary text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">All Employees</a>
             {% for bu in business_units %}
-            <a href="/employees?department=All&business_unit={{ bu | urlencode }}&hours_category=All"
+            <a href="/employees?department=All&business_unit={{ bu | urlencode }}&hours_category=All&search_query={{ search_query|urlencode }}"
                 class="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors {% if bu_filter == bu %}bg-primary text-white shadow-sm{% else %}text-slate-500 hover:bg-slate-100{% endif %}">{{ bu }}</a>
             {% endfor %}
         </div>
         
         <!-- Dropdown Filters -->
-        <form method="GET" action="/employees" class="col-span-12 lg:col-span-4 flex gap-3">
+        <form method="GET" action="/employees" class="col-span-12 lg:col-span-7 flex gap-3">
+            <div class="relative flex-[1.5]">
+                <input type="text" name="search_query" value="{{ search_query }}" placeholder="Search Name or ID"
+                    class="w-full bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary/20 py-3 pl-10 pr-4 text-slate-700 shadow-sm transition-all focus:border-primary">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+            </div>
             <div class="relative flex-1">
                 <select name="department" onchange="this.form.submit()"
                     class="w-full bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary/20 py-3 pl-4 pr-10 appearance-none text-slate-700 shadow-sm transition-all focus:border-primary cursor-pointer hover:border-slate-300">
@@ -153,7 +158,7 @@
             <p class="text-xs text-slate-500 font-medium">Showing {{ records|length }} of {{ filtered_count }} entries (Total: {{ all_count }})</p>
             <div class="flex gap-2">
                 {% set prev_page = page - 1 if page > 1 else 1 %}
-                <a href="?page={{ prev_page }}&department={{ dept_filter }}&business_unit={{ bu_filter }}&hours_category={{ hours_category }}&employee_status={{ status_filter }}"
+                <a href="?page={{ prev_page }}&department={{ dept_filter|urlencode }}&business_unit={{ bu_filter|urlencode }}&hours_category={{ hours_category|urlencode }}&employee_status={{ status_filter|urlencode }}&search_query={{ search_query|urlencode }}"
                     class="p-2 border border-slate-200 bg-white rounded-lg transition-colors {% if page == 1 %}opacity-30 cursor-not-allowed pointer-events-none{% else %}hover:bg-slate-100 hover:border-slate-300{% endif %}">
                     <span class="material-symbols-outlined text-sm text-slate-600">chevron_left</span>
                 </a>
@@ -167,13 +172,13 @@
                     {% if p == page %}
                         <span class="px-3.5 py-1.5 bg-primary text-white rounded-lg text-sm font-bold shadow-sm">{{ p }}</span>
                     {% else %}
-                        <a href="?page={{ p }}&department={{ dept_filter }}&business_unit={{ bu_filter }}&hours_category={{ hours_category }}&employee_status={{ status_filter }}"
+                        <a href="?page={{ p }}&department={{ dept_filter|urlencode }}&business_unit={{ bu_filter|urlencode }}&hours_category={{ hours_category|urlencode }}&employee_status={{ status_filter|urlencode }}&search_query={{ search_query|urlencode }}"
                             class="px-3.5 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors">{{ p }}</a>
                     {% endif %}
                 {% endfor %}
 
                 {% set next_page = page + 1 if page < total_pages else total_pages %}
-                <a href="?page={{ next_page }}&department={{ dept_filter }}&business_unit={{ bu_filter }}&hours_category={{ hours_category }}&employee_status={{ status_filter }}"
+                <a href="?page={{ next_page }}&department={{ dept_filter|urlencode }}&business_unit={{ bu_filter|urlencode }}&hours_category={{ hours_category|urlencode }}&employee_status={{ status_filter|urlencode }}&search_query={{ search_query|urlencode }}"
                     class="p-2 border border-slate-200 bg-white rounded-lg transition-colors {% if page == total_pages or total_pages == 0 %}opacity-30 cursor-not-allowed pointer-events-none{% else %}hover:bg-slate-100 hover:border-slate-300{% endif %}">
                     <span class="material-symbols-outlined text-sm text-slate-600">chevron_right</span>
                 </a>

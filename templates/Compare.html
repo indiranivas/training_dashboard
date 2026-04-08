@@ -1,0 +1,1273 @@
+{% extends "base.html" %}
+
+{% set current_page = 'compare' %}
+
+{% block title %}Compare Years | Training Analytics{% endblock %}
+{% block header_title %}Compare Workspace{% endblock %}
+
+{% block header_context %}
+<div class="h-4 w-[1px] bg-slate-300 mx-2 hidden md:block"></div>
+<div class="hidden md:flex items-center gap-2 text-primary text-sm font-medium">
+    <span class="material-symbols-outlined text-xs">compare_arrows</span>
+    <span>Year-Over-Year Analysis</span>
+</div>
+{% endblock %}
+
+{% block context %}
+<script id="insight-context" type="application/json">
+  {{ {"page":"compare","year_a":year_a,"year_b":year_b,"dimension":dimension,"metric":metric_key,"quarter":quarter_focus} | tojson }}
+</script>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* ── Reset & Base ─────────────────────────────────────── */
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+
+    /* ── Layout ───────────────────────────────────────────── */
+    .compare-page {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        padding: 2rem;
+        max-width: 1600px;
+        margin: 0 auto;
+    }
+
+    .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .grid-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .grid-6 {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 0.75rem;
+    }
+
+    .grid-7-5 {
+        display: grid;
+        grid-template-columns: 7fr 5fr;
+        gap: 1rem;
+    }
+
+    .grid-8-4 {
+        display: grid;
+        grid-template-columns: 8fr 4fr;
+        gap: 1rem;
+    }
+
+    @media (max-width: 1280px) {
+        .grid-6 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .grid-7-5 {
+            grid-template-columns: 1fr;
+        }
+
+        .grid-8-4 {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .compare-page {
+            padding: 1rem;
+        }
+
+        .grid-2 {
+            grid-template-columns: 1fr;
+        }
+
+        .grid-3 {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .grid-6 {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    /* ── Card shell ───────────────────────────────────────── */
+    .card {
+        background: #fff;
+        border: 1px solid #e8edf2;
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #f1f5f9;
+        background: #fafbfc;
+        gap: 1rem;
+    }
+
+    .card-header-left {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .card-header-right {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-shrink: 0;
+    }
+
+    .card-title {
+        font-size: 0.875rem;
+        font-weight: 700;
+        color: #1e293b;
+    }
+
+    .card-sub {
+        font-size: 0.7rem;
+        color: #94a3b8;
+    }
+
+    .card-body {
+        padding: 1.25rem;
+    }
+
+    /* ── Page header ──────────────────────────────────────── */
+    .page-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .page-header-left {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .page-eyebrow {
+        font-size: 0.65rem;
+        font-weight: 900;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: #009ADA;
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1.2;
+    }
+
+    .page-desc {
+        font-size: 0.8rem;
+        color: #64748b;
+        margin-top: 2px;
+    }
+
+    .active-comparison {
+        display: flex;
+        align-items: center;
+        gap: 0.875rem;
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        border: 1px solid #bae6fd;
+        border-radius: 14px;
+        padding: 0.875rem 1.25rem;
+        flex-shrink: 0;
+    }
+
+    .active-comparison-label {
+        font-size: 0.6rem;
+        font-weight: 800;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: #94a3b8;
+        margin-bottom: 0.5rem;
+        text-align: center;
+    }
+
+    .active-comparison-years {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .year-chip-a {
+        font-size: 1rem;
+        font-weight: 800;
+        padding: 0.35rem 1rem;
+        background: #f1f5f9;
+        color: #475569;
+        border-radius: 8px;
+    }
+
+    .year-chip-b {
+        font-size: 1rem;
+        font-weight: 800;
+        padding: 0.35rem 1rem;
+        background: #009ADA;
+        color: #fff;
+        border-radius: 8px;
+    }
+
+    .year-swap-icon {
+        color: #009ADA;
+        font-size: 1.1rem;
+    }
+
+    .active-comparison-meta {
+        font-size: 0.7rem;
+        color: #64748b;
+        text-align: center;
+        margin-top: 0.4rem;
+    }
+
+    /* ── Filter form ──────────────────────────────────────── */
+    .filter-form {
+        background: #fff;
+        border: 1px solid #e8edf2;
+        border-radius: 14px;
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .filter-section-label {
+        font-size: 0.6rem;
+        font-weight: 900;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: #cbd5e1;
+        margin-bottom: 0.5rem;
+    }
+
+    .filter-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: flex-end;
+    }
+
+    .filter-divider {
+        border: none;
+        border-top: 1px solid #f1f5f9;
+        margin: 0;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        min-width: 140px;
+        flex: 1;
+    }
+
+    .filter-label {
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #94a3b8;
+    }
+
+    .filter-select {
+        appearance: none;
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 9px;
+        padding: 0.5rem 2rem 0.5rem 0.75rem;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: #334155;
+        cursor: pointer;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .filter-select:focus {
+        outline: none;
+        border-color: #009ADA;
+        box-shadow: 0 0 0 3px rgba(0, 154, 218, 0.12);
+    }
+
+    .filter-select:hover {
+        border-color: #94a3b8;
+    }
+
+    .filter-actions {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding-top: 0.25rem;
+    }
+
+    .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #009ADA;
+        color: #fff;
+        padding: 0.55rem 1.1rem;
+        border: none;
+        border-radius: 9px;
+        font-size: 0.8125rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.15s, transform 0.1s;
+    }
+
+    .btn-primary:hover {
+        background: #0082b8;
+    }
+
+    .btn-primary:active {
+        transform: scale(0.98);
+    }
+
+    .btn-primary .material-symbols-outlined {
+        font-size: 0.9rem;
+    }
+
+    .btn-reset {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #94a3b8;
+        text-decoration: none;
+        transition: color 0.15s;
+    }
+
+    .btn-reset:hover {
+        color: #009ADA;
+    }
+
+    .active-filter-strip {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        align-items: center;
+        padding-top: 0.35rem;
+    }
+
+    .active-filter-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.45rem 0.7rem;
+        border-radius: 999px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        color: #334155;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .active-filter-chip-label {
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.62rem;
+        font-weight: 800;
+    }
+
+    .active-filter-empty {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        font-weight: 600;
+    }
+
+    /* ── KPI Cards ────────────────────────────────────────── */
+    .kpi-card {
+        background: #fff;
+        border: 1px solid #e8edf2;
+        border-radius: 14px;
+        padding: 1rem 1.1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        transition: box-shadow 0.2s, transform 0.2s;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .kpi-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: #009ADA;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+
+    .kpi-card:hover {
+        box-shadow: 0 8px 24px -4px rgba(0, 154, 218, 0.14);
+        transform: translateY(-2px);
+    }
+
+    .kpi-card:hover::before {
+        opacity: 1;
+    }
+
+    .kpi-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .kpi-label {
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #94a3b8;
+    }
+
+    .kpi-icon {
+        font-size: 1.1rem !important;
+        color: rgba(0, 154, 218, 0.5);
+    }
+
+    .kpi-values {
+        display: flex;
+        align-items: flex-end;
+        gap: 6px;
+    }
+
+    .kpi-year-block {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+    }
+
+    .kpi-year-tag {
+        font-size: 0.6rem;
+        color: #94a3b8;
+    }
+
+    .kpi-year-tag.is-b {
+        color: #009ADA;
+    }
+
+    .kpi-val-a {
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #64748b;
+    }
+
+    .kpi-val-b {
+        font-size: 1.35rem;
+        font-weight: 900;
+        color: #009ADA;
+    }
+
+    .kpi-arrow {
+        font-size: 0.9rem !important;
+        color: #cbd5e1;
+        margin-bottom: 3px;
+    }
+
+    .kpi-delta {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 99px;
+        width: fit-content;
+    }
+
+    .kpi-delta.up {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+
+    .kpi-delta.down {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    .kpi-delta.flat {
+        background: #f1f5f9;
+        color: #64748b;
+    }
+
+    .kpi-delta .material-symbols-outlined {
+        font-size: 0.75rem !important;
+    }
+
+    /* ── Charts ───────────────────────────────────────────── */
+    .chart-legend {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .legend-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 3px;
+        display: inline-block;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #64748b;
+    }
+
+    /* ── Tables ───────────────────────────────────────────── */
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8125rem;
+    }
+
+    .data-table thead th {
+        padding: 0.6rem 1rem;
+        text-align: left;
+        font-size: 0.62rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: #94a3b8;
+        background: #fafbfc;
+        border-bottom: 1px solid #f1f5f9;
+        white-space: nowrap;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .data-table thead th.text-right {
+        text-align: right;
+    }
+
+    .data-table tbody tr {
+        transition: background 0.1s;
+    }
+
+    .data-table tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    .data-table tbody td {
+        padding: 0.65rem 1rem;
+        border-bottom: 1px solid #f8fafc;
+        color: #334155;
+        vertical-align: middle;
+    }
+
+    .data-table tbody td.text-right {
+        text-align: right;
+    }
+
+    .data-table tbody td.muted {
+        color: #94a3b8;
+    }
+
+    .data-table tbody td.primary {
+        color: #009ADA;
+        font-weight: 700;
+    }
+
+    .data-table tbody td.bold {
+        font-weight: 700;
+    }
+
+    .data-table .empty-state td {
+        padding: 3rem 1rem;
+        text-align: center;
+        color: #94a3b8;
+        font-size: 0.8rem;
+    }
+
+    /* ── Delta badges ─────────────────────────────────────── */
+    .delta-up {
+        color: #16a34a;
+        font-weight: 700;
+    }
+
+    .delta-down {
+        color: #dc2626;
+        font-weight: 700;
+    }
+
+    .delta-flat {
+        color: #64748b;
+    }
+
+    /* ── Progress bars ────────────────────────────────────── */
+    .bar-pair {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 100px;
+    }
+
+    .bar-track {
+        background: #f1f5f9;
+        border-radius: 999px;
+        height: 5px;
+        overflow: hidden;
+    }
+
+    .bar-fill-a {
+        background: #cbd5e1;
+        height: 5px;
+        border-radius: 999px;
+        transition: width 0.5s ease;
+    }
+
+    .bar-fill-b {
+        background: #009ADA;
+        height: 5px;
+        border-radius: 999px;
+        transition: width 0.5s ease;
+    }
+
+    /* ── Year badges ──────────────────────────────────────── */
+    .badge-a {
+        background: #f1f5f9;
+        color: #475569;
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 99px;
+    }
+
+    .badge-b {
+        background: #e0f4fd;
+        color: #0077aa;
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 99px;
+    }
+
+    /* ── Quarter matrix ───────────────────────────────────── */
+    .q-chip {
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
+        background: #e0f4fd;
+        color: #009ADA;
+        font-size: 0.65rem;
+        font-weight: 800;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .q-bar-section {
+        padding: 1rem 1.25rem;
+        border-top: 1px solid #f1f5f9;
+        display: flex;
+        flex-direction: column;
+        gap: 0.875rem;
+    }
+
+    .q-bar-row-label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.7rem;
+        color: #64748b;
+        margin-bottom: 4px;
+    }
+
+    .q-bar-row-label strong {
+        color: #009ADA;
+    }
+
+    /* ── Scrollable table body ────────────────────────────── */
+    .table-scroll {
+        overflow-x: auto;
+        overflow-y: auto;
+        max-height: 480px;
+    }
+
+    /* ── Responsive tweaks ────────────────────────────────── */
+    @media (max-width: 640px) {
+        .page-header {
+            flex-direction: column;
+        }
+
+        .active-comparison {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .filter-group {
+            min-width: calc(50% - 0.375rem);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="compare-page">
+
+    <!-- ═══════════════════════════════════════════════════════
+         PAGE HEADER
+    ════════════════════════════════════════════════════════ -->
+    <div class="page-header">
+        <div class="page-header-left">
+            <p class="page-eyebrow">Advanced Compare Lab</p>
+            <h1 class="page-title">Year-Over-Year Comparison</h1>
+            <p class="page-desc">Compare any two years across departments, business units, training types, and quarterly
+                trends.</p>
+        </div>
+        <div class="active-comparison">
+            <div>
+                <p class="active-comparison-label">Active comparison</p>
+                <div class="active-comparison-years">
+                    <span class="year-chip-a">{{ comparison_ref_a }}</span>
+                    <span class="material-symbols-outlined year-swap-icon">compare_arrows</span>
+                    <span class="year-chip-b">{{ comparison_ref_b }}</span>
+                </div>
+                <p class="active-comparison-meta">{{ comparison_scope_label }} &middot; {{ metric_options[metric_key] }} &middot; {{
+                    variable_options[dimension] }}</p>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════════════════
+         FILTER PANEL
+    ════════════════════════════════════════════════════════ -->
+    <form method="GET" action="/compare" class="filter-form">
+
+        <!-- Row 1: Primary filters -->
+        <div>
+            <p class="filter-section-label">Primary filters</p>
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label class="filter-label" for="f_year_a">Baseline year</label>
+                    <select id="f_year_a" name="year_a" class="filter-select">
+                        {% for yr in available_years %}
+                        <option value="{{ yr }}" {% if yr==year_a %}selected{% endif %}>{{ yr }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label" for="f_year_b">Compare year</label>
+                    <select id="f_year_b" name="year_b" class="filter-select">
+                        {% for yr in available_years %}
+                        <option value="{{ yr }}" {% if yr==year_b %}selected{% endif %}>{{ yr }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label" for="f_dimension">Compare by</label>
+                    <select id="f_dimension" name="dimension" class="filter-select">
+                        {% for key, label in variable_options.items() %}
+                        <option value="{{ key }}" {% if key==dimension %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label" for="f_metric">Metric</label>
+                    <select id="f_metric" name="metric" class="filter-select">
+                        {% for key, label in metric_options.items() %}
+                        <option value="{{ key }}" {% if key==metric_key %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label" for="f_quarter">Quarter</label>
+                    <select id="f_quarter" name="quarter" class="filter-select">
+                        <option value="All" {% if quarter_focus=='All' %}selected{% endif %}>All quarters</option>
+                        {% for q in quarter_options %}
+                        <option value="{{ q }}" {% if q==quarter_focus %}selected{% endif %}>{{ q }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <hr class="filter-divider">
+
+        <!-- Row 2: Contextual filters -->
+        <div>
+            <p class="filter-section-label">Contextual filters</p>
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label class="filter-label" for="f_dept">Department</label>
+                    <select id="f_dept" name="department" class="filter-select">
+                        <option value="All">All departments</option>
+                        {% for item in filter_options.departments %}
+                        <option value="{{ item }}" {% if item==department_filter %}selected{% endif %}>{{ item }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label" for="f_bu">Business unit</label>
+                    <select id="f_bu" name="business_unit" class="filter-select">
+                        <option value="All">All business units</option>
+                        {% for item in filter_options.business_units %}
+                        <option value="{{ item }}" {% if item==business_unit_filter %}selected{% endif %}>{{ item }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label" for="f_type">Training type</label>
+                    <select id="f_type" name="training_type" class="filter-select">
+                        <option value="All">All types</option>
+                        {% for item in filter_options.training_types %}
+                        <option value="{{ item }}" {% if item==training_type_filter %}selected{% endif %}>{{ item }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label" for="f_status">Training status</label>
+                    <select id="f_status" name="training_status" class="filter-select">
+                        <option value="All">All statuses</option>
+                        {% for item in filter_options.training_statuses %}
+                        <option value="{{ item }}" {% if item==training_status_filter %}selected{% endif %}>{{ item }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="filter-actions">
+            <button type="submit" class="btn-primary">
+                <span class="material-symbols-outlined">insights</span>
+                Run comparison
+            </button>
+            <a href="/compare" class="btn-reset">Reset all</a>
+        </div>
+        <div class="active-filter-strip">
+            <span class="active-filter-chip">
+                <span class="active-filter-chip-label">View</span>
+                <span>{{ comparison_scope_label }}</span>
+            </span>
+            {% for item in active_filters %}
+            <span class="active-filter-chip">
+                <span class="active-filter-chip-label">{{ item.label }}</span>
+                <span>{{ item.value }}</span>
+            </span>
+            {% endfor %}
+            {% if not active_filters %}
+            <span class="active-filter-empty">No extra filters applied. Showing the broadest comparison view.</span>
+            {% endif %}
+        </div>
+    </form>
+
+
+    <!-- ═══════════════════════════════════════════════════════
+         KPI SUMMARY ROW
+    ════════════════════════════════════════════════════════ -->
+    {% set kpi_items = [
+    ('Employees', summary_a.employees, summary_b.employees, summary_deltas.employees, summary_deltas.employees_up,
+    'group'),
+    ('Completion rate', "%.1f"|format(summary_a.completion_rate) ~ '%', "%.1f"|format(summary_b.completion_rate) ~ '%',
+    summary_deltas.completion_rate, summary_deltas.completion_rate_up, 'verified'),
+    ('Coverage', "%.1f"|format(summary_a.coverage) ~ '%', "%.1f"|format(summary_b.coverage) ~ '%',
+    summary_deltas.coverage, summary_deltas.coverage_up, 'analytics'),
+    ('Total hours', "%.0f"|format(summary_a.total_hours), "%.0f"|format(summary_b.total_hours),
+    summary_deltas.total_hours, summary_deltas.total_hours_up, 'schedule'),
+    ('Unique trainings', summary_a.unique_trainings, summary_b.unique_trainings, summary_deltas.unique_trainings,
+    summary_deltas.unique_trainings_up, 'menu_book'),
+    ('Completed (20+hr)', summary_a.completed_employees, summary_b.completed_employees,
+    summary_deltas.completed_employees, summary_deltas.completed_employees_up, 'workspace_premium'),
+    ] %}
+    <div class="grid-6">
+        {% for label, val_a, val_b, delta, is_up, icon in kpi_items %}
+        <div class="kpi-card">
+            <div class="kpi-top">
+                <span class="kpi-label">{{ label }}</span>
+                <span class="material-symbols-outlined kpi-icon">{{ icon }}</span>
+            </div>
+            <div class="kpi-values">
+                <div class="kpi-year-block">
+                    <span class="kpi-year-tag">{{ comparison_ref_a }}</span>
+                    <span class="kpi-val-a">{{ val_a }}</span>
+                </div>
+                <span class="material-symbols-outlined kpi-arrow">arrow_forward</span>
+                <div class="kpi-year-block">
+                    <span class="kpi-year-tag is-b">{{ comparison_ref_b }}</span>
+                    <span class="kpi-val-b">{{ val_b }}</span>
+                </div>
+            </div>
+            <div class="kpi-delta {{ 'up' if is_up else 'down' }}">
+                <span class="material-symbols-outlined">{{ 'trending_up' if is_up else 'trending_down' }}</span>
+                {{ delta }} vs {{ comparison_ref_a }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════════════════
+         CHARTS ROW
+    ════════════════════════════════════════════════════════ -->
+    <div class="grid-7-5">
+
+        <!-- Bar Chart -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-header-left">
+                    <span class="card-title">{{ metric_options[metric_key] }} by {{ variable_options[dimension]
+                        }}</span>
+                    <span class="card-sub">Top segments · {{ comparison_ref_a }} vs {{ comparison_ref_b }}</span>
+                </div>
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <span class="legend-dot" style="background:#cbd5e1"></span>
+                        {{ comparison_ref_a }}
+                    </div>
+                    <div class="legend-item" style="color:#009ADA">
+                        <span class="legend-dot" style="background:#009ADA"></span>
+                        {{ comparison_ref_b }}
+                    </div>
+                </div>
+            </div>
+            <div class="card-body" style="padding-top:1rem">
+                <div style="position:relative; width:100%; height:300px;">
+                    <canvas id="dimensionCompareChart" role="img"
+                        aria-label="Grouped bar chart comparing {{ metric_options[metric_key] }} by {{ variable_options[dimension] }} for {{ comparison_ref_a }} and {{ comparison_ref_b }}.">
+                    </canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quarter Line Chart -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-header-left">
+                    <span class="card-title">Quarterly trend</span>
+                    <span class="card-sub">{{ metric_options[metric_key] }} · full-year quarterly reference{% if quarter_focus != 'All' %} · selected focus: {{ quarter_focus }}{% endif %}</span>
+                </div>
+                <div class="chart-legend">
+                    <div class="legend-item">
+                        <span class="legend-dot" style="background:#94a3b8"></span>
+                        {{ year_a }}
+                    </div>
+                    <div class="legend-item" style="color:#009ADA">
+                        <span class="legend-dot" style="background:#009ADA"></span>
+                        {{ year_b }}
+                    </div>
+                </div>
+            </div>
+            <div class="card-body" style="padding-top:1rem">
+                <div style="position:relative; width:100%; height:300px;">
+                    <canvas id="quarterCompareChart" role="img"
+                        aria-label="Line chart comparing quarterly {{ metric_options[metric_key] }} for {{ year_a }} and {{ year_b }}.">
+                    </canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════════════════
+         DETAIL TABLES ROW
+    ════════════════════════════════════════════════════════ -->
+    <div class="grid-8-4">
+
+        <!-- ── Breakdown Table ── -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-header-left">
+                    <span class="card-title">{{ variable_options[dimension] }} breakdown</span>
+                    <span class="card-sub">{{ comparison_rows|length }} row{{ 's' if comparison_rows|length != 1 }}
+                        &middot; {{ metric_options[metric_key] }} &middot; {{ comparison_scope_label }}</span>
+                </div>
+                <div class="card-header-right">
+                    <span class="badge-a">{{ comparison_ref_a }}</span>
+                    <span class="badge-b">{{ comparison_ref_b }}</span>
+                </div>
+            </div>
+            <div class="table-scroll">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="min-width:150px">{{ variable_options[dimension] }}</th>
+                            <th class="text-right" style="width:110px">{{ comparison_ref_a }}</th>
+                            <th class="text-right" style="width:110px">{{ comparison_ref_b }}</th>
+                            <th style="min-width:160px">Comparison</th>
+                            <th class="text-right" style="width:80px">Delta</th>
+                            <th class="text-right" style="width:80px">Change %</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in comparison_rows %}
+                        {% set max_val = row.bigger_value if row.bigger_value > 0 else 1 %}
+                        {% set pct_a = ((row.year_a_value / max_val) * 100) | round(1) %}
+                        {% set pct_b = ((row.year_b_value / max_val) * 100) | round(1) %}
+                        <tr>
+                            <td class="bold" title="{{ row.label }}"
+                                style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{
+                                row.label }}</td>
+                            <td class="text-right muted">{{ row.year_a_value }}</td>
+                            <td class="text-right primary">{{ row.year_b_value }}</td>
+                            <td>
+                                <div class="bar-pair">
+                                    <div class="bar-track">
+                                        <div class="bar-fill-a" style="width:{{ pct_a }}%"></div>
+                                    </div>
+                                    <div class="bar-track">
+                                        <div class="bar-fill-b" style="width:{{ pct_b }}%"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-right {{ 'delta-up' if row.delta >= 0 else 'delta-down' }}">
+                                {{ '+' if row.delta > 0 else '' }}{{ row.delta }}
+                            </td>
+                            <td class="text-right {{ 'delta-up' if row.delta_pct >= 0 else 'delta-down' }}">
+                                {{ '+' if row.delta_pct > 0 else '' }}{{ row.delta_pct }}%
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr class="empty-state">
+                            <td colspan="6">
+                                <span class="material-symbols-outlined"
+                                    style="font-size:2rem;color:#e2e8f0;display:block;margin-bottom:0.5rem">bar_chart</span>
+                                No data for this combination. Try different filters.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ── Quarter Matrix ── -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-header-left">
+                    <span class="card-title">Quarter matrix</span>
+                    <span class="card-sub">{{ metric_options[metric_key] }} · yearly quarter-by-quarter reference</span>
+                </div>
+            </div>
+
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width:80px">Quarter</th>
+                        <th class="text-right">{{ year_a }}</th>
+                        <th class="text-right">{{ year_b }}</th>
+                        <th class="text-right">Delta</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in quarter_rows %}
+                    <tr>
+                        <td><span class="q-chip">{{ row.quarter }}</span></td>
+                        <td class="text-right muted">{{ row.year_a_value }}</td>
+                        <td class="text-right primary">{{ row.year_b_value }}</td>
+                        <td class="text-right {{ 'delta-up' if row.delta >= 0 else 'delta-down' }}">
+                            {{ '+' if row.delta > 0 else '' }}{{ row.delta }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Visual bars per quarter -->
+            <div class="q-bar-section">
+                {% for row in quarter_rows %}
+                {% set max_q = namespace(v=1) %}
+                {% for r in quarter_rows %}
+                {% if r.year_a_value > max_q.v %}{% set max_q.v = r.year_a_value %}{% endif %}
+                {% if r.year_b_value > max_q.v %}{% set max_q.v = r.year_b_value %}{% endif %}
+                {% endfor %}
+                {% set pa = ((row.year_a_value / max_q.v) * 100) | round(1) %}
+                {% set pb = ((row.year_b_value / max_q.v) * 100) | round(1) %}
+                <div>
+                    <div class="q-bar-row-label">
+                        <span style="font-weight:700">{{ row.quarter }}</span>
+                        <span>{{ row.year_a_value }} &rarr; <strong>{{ row.year_b_value }}</strong></span>
+                    </div>
+                    <div class="bar-pair">
+                        <div class="bar-track">
+                            <div class="bar-fill-a" style="width:{{ pa }}%"></div>
+                        </div>
+                        <div class="bar-track">
+                            <div class="bar-fill-b" style="width:{{ pb }}%"></div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                <div class="chart-legend" style="padding-top:0.25rem">
+                    <div class="legend-item">
+                        <span class="legend-dot"
+                            style="background:#cbd5e1;width:14px;height:6px;border-radius:99px"></span>
+                        {{ year_a }}
+                    </div>
+                    <div class="legend-item" style="color:#009ADA">
+                        <span class="legend-dot"
+                            style="background:#009ADA;width:14px;height:6px;border-radius:99px"></span>
+                        {{ year_b }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- end tables row -->
+
+</div><!-- end compare-page -->
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+    const chartLabels = {{ chart_labels        | tojson }};
+    const chartYearAValues = {{ chart_year_a_values | tojson }};
+    const chartYearBValues = {{ chart_year_b_values | tojson }};
+    const quarterChartLabels = {{ quarter_chart_labels | tojson }};
+    const quarterChartYearA = {{ quarter_chart_year_a | tojson }};
+    const quarterChartYearB = {{ quarter_chart_year_b | tojson }};
+    const yearA = {{ year_a | tojson }};
+    const yearB = {{ year_b | tojson }};
+    const comparisonRefA = {{ comparison_ref_a | tojson }};
+    const comparisonRefB = {{ comparison_ref_b | tojson }};
+
+    Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
+    Chart.defaults.color = '#64748b';
+
+    /* ── Dimension Bar Chart ─────────────────────────────── */
+    new Chart(document.getElementById('dimensionCompareChart'), {
+        type: 'bar',
+        data: {
+            labels: chartLabels,
+            datasets: [
+                {
+                    label: String(comparisonRefA),
+                    data: chartYearAValues,
+                    backgroundColor: '#cbd5e1',
+                    borderRadius: 5,
+                    barPercentage: 0.72,
+                    categoryPercentage: 0.65
+                },
+                {
+                    label: String(comparisonRefB),
+                    data: chartYearBValues,
+                    backgroundColor: '#009ADA',
+                    borderRadius: 5,
+                    barPercentage: 0.72,
+                    categoryPercentage: 0.65
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        title: (items) => items[0]?.label || '',
+                        label: (item) => `  ${item.dataset.label}: ${item.formattedValue}`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    border: { display: false },
+                    ticks: { maxRotation: 35, minRotation: 0, font: { size: 11 }, autoSkip: false }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#f1f5f9' },
+                    border: { display: false },
+                    ticks: { font: { size: 11 } }
+                }
+            }
+        }
+    });
+
+    /* ── Quarter Line Chart ──────────────────────────────── */
+    new Chart(document.getElementById('quarterCompareChart'), {
+        type: 'line',
+        data: {
+            labels: quarterChartLabels,
+            datasets: [
+                {
+                    label: String(yearA),
+                    data: quarterChartYearA,
+                    borderColor: '#94a3b8',
+                    backgroundColor: 'rgba(148,163,184,0.08)',
+                    fill: true,
+                    tension: 0.35,
+                    borderWidth: 2,
+                    pointRadius: 5,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#94a3b8',
+                    pointBorderWidth: 2,
+                    pointHoverRadius: 7
+                },
+                {
+                    label: String(yearB),
+                    data: quarterChartYearB,
+                    borderColor: '#009ADA',
+                    backgroundColor: 'rgba(0,154,218,0.08)',
+                    fill: true,
+                    tension: 0.35,
+                    borderWidth: 2.5,
+                    pointRadius: 5,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#009ADA',
+                    pointBorderWidth: 2,
+                    pointHoverRadius: 7
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { display: false } },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    border: { display: false },
+                    ticks: { font: { size: 12 } }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: '#f1f5f9' },
+                    border: { display: false },
+                    ticks: { font: { size: 11 } }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

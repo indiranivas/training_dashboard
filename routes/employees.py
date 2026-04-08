@@ -13,6 +13,7 @@ def employees():
     bu_filter = request.args.get('business_unit', 'All')
     hours_category = request.args.get('hours_category', 'All')
     status_filter = request.args.get('employee_status', 'All')
+    search_query = request.args.get('search_query', '').strip()
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
 
@@ -42,6 +43,12 @@ def employees():
         agg_df = agg_df[agg_df['Hours_Category'] == hours_category]
     if status_filter != 'All':
         agg_df = agg_df[agg_df['Employee_Status'] == status_filter]
+        
+    if search_query:
+        query_lower = search_query.lower()
+        id_match = agg_df['Emp ID'].astype(str).str.lower().str.contains(query_lower)
+        name_match = agg_df['Employee Name'].astype(str).str.lower().str.contains(query_lower)
+        agg_df = agg_df[id_match | name_match]
 
     agg_df = agg_df.sort_values(by='Total_Hours', ascending=False)
 
@@ -83,6 +90,7 @@ def employees():
         employee_courses=employee_courses,
         filtered_count=total_records,
         all_count=all_emp_count,
+        search_query=search_query,
         page=page,
         total_pages=total_pages
     )

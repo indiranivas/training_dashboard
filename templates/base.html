@@ -91,6 +91,18 @@
                 <span class="material-symbols-outlined transition-transform group-hover:scale-110" style="font-variation-settings: 'FILL' {% if current_page == 'analytics' %}1{% else %}0{% endif %};">assessment</span>
                 <span>Reports</span>
             </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 {% if current_page == 'compare' %}bg-primary/10 text-primary font-bold shadow-sm{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium{% endif %}" href="/compare">
+                <span class="material-symbols-outlined transition-transform group-hover:scale-110" style="font-variation-settings: 'FILL' {% if current_page == 'compare' %}1{% else %}0{% endif %};">compare_arrows</span>
+                <span>Compare</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 {% if current_page == 'data' %}bg-primary/10 text-primary font-bold shadow-sm{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium{% endif %}" href="/data">
+                <span class="material-symbols-outlined transition-transform group-hover:scale-110" style="font-variation-settings: 'FILL' {% if current_page == 'data' %}1{% else %}0{% endif %};">database</span>
+                <span>Data Engine</span>
+            </a>
+            <a class="flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 {% if current_page == 'trainings' %}bg-primary/10 text-primary font-bold shadow-sm{% else %}text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium{% endif %}" href="/trainings">
+                <span class="material-symbols-outlined transition-transform group-hover:scale-110" style="font-variation-settings: 'FILL' {% if current_page == 'trainings' %}1{% else %}0{% endif %};">school</span>
+                <span>Trainings</span>
+            </a>
         </nav>
         <div class="mt-auto p-2">
             <button

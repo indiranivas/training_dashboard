@@ -1,0 +1,434 @@
+{% extends "base.html" %}
+{% block title %}Training Management | L&D Dashboard{% endblock %}
+{% block header_title %}Training Management{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* ── Card Animations ── */
+    .training-type-card {
+        transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease, border-color 0.2s ease;
+        cursor: pointer; position: relative; overflow: hidden;
+    }
+    .training-type-card::before {
+        content:''; position:absolute; inset:0;
+        background:linear-gradient(135deg,rgba(255,255,255,0.12) 0%,transparent 60%);
+        opacity:0; transition:opacity 0.3s ease;
+    }
+    .training-type-card:hover::before { opacity:1; }
+    .training-type-card:hover {
+        transform: translateY(-6px) scale(1.01);
+        box-shadow: 0 20px 40px -8px rgba(0,154,218,0.22);
+    }
+    .training-type-card.active {
+        border-color:#009ADA !important;
+        box-shadow: 0 0 0 3px rgba(0,154,218,0.15), 0 12px 32px -6px rgba(0,154,218,0.2);
+        transform: translateY(-4px);
+    }
+    .card-icon-bg { transition: transform 0.3s ease; }
+    .training-type-card:hover .card-icon-bg { transform: scale(1.1) rotate(-4deg); }
+
+    /* ── Drill Panel ── */
+    #drill-panel { transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94); }
+    #drill-panel.entering { opacity:0; transform:translateY(16px); }
+
+    /* ── List rows ── */
+    .drill-item {
+        transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+        cursor: pointer;
+    }
+    .drill-item:hover   { background:#f0f9ff; transform:translateX(4px); box-shadow:-3px 0 0 #009ADA; }
+    .drill-item.active-item { background:#e0f4fd; box-shadow:-3px 0 0 #009ADA; color:#007bb5; font-weight:600; }
+
+    /* ── Employee chip ── */
+    .emp-chip { transition: background-color 0.15s ease, transform 0.15s ease; }
+    .emp-chip:hover { background:#bae6fd; transform:translateY(-1px); }
+
+    /* ── Spinner ── */
+    .spinner { border:3px solid #e2e8f0; border-top-color:#009ADA; border-radius:50%; width:28px; height:28px; animation:spin 0.7s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* ── Column fade ── */
+    .col-panel { transition: opacity 0.25s ease, transform 0.25s ease; }
+    .col-panel.hidden-panel { opacity:0; transform:translateX(-8px); pointer-events:none; }
+
+    /* ── Stat pill ── */
+    .stat-pill { font-size:11px; line-height:1; padding:3px 8px; border-radius:999px; font-weight:600; white-space:nowrap; }
+
+    /* ── Breadcrumb ── */
+    .breadcrumb-sep { color:#94a3b8; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="p-8 space-y-8">
+
+    <!-- Page Header -->
+    <div>
+        <h1 class="text-2xl font-bold text-slate-800">Training Management</h1>
+        <p class="text-slate-500 text-sm mt-1">Explore training programs by delivery mode — drill into trainers, programs, and attendees.</p>
+    </div>
+
+    <!-- Landing Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <!-- Internal -->
+        <div id="card-Internal" onclick="selectCategory('Internal')"
+             class="training-type-card bg-white rounded-2xl border-2 border-slate-100 p-6 flex flex-col gap-4 shadow-soft">
+            <div class="card-icon-bg w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
+                <span class="material-symbols-outlined text-white text-2xl">apartment</span>
+            </div>
+            <div>
+                <h2 class="text-lg font-bold text-slate-800">Internal Training</h2>
+                <p class="text-sm text-slate-500 mt-1">Programs delivered by in-house trainers & subject-matter experts.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 mt-auto pt-3 border-t border-slate-100">
+                {% if summary.get('Internal') %}
+                <span class="stat-pill bg-indigo-50 text-indigo-600">{{ summary.Internal.trainers }} Trainers</span>
+                <span class="stat-pill bg-blue-50 text-blue-600">{{ summary.Internal.programs }} Programs</span>
+                <span class="stat-pill bg-slate-100 text-slate-600">{{ summary.Internal.attendees }} Attendees</span>
+                {% else %}
+                <span class="stat-pill bg-slate-100 text-slate-500">Loading…</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- External -->
+        <div id="card-External" onclick="selectCategory('External')"
+             class="training-type-card bg-white rounded-2xl border-2 border-slate-100 p-6 flex flex-col gap-4 shadow-soft">
+            <div class="card-icon-bg w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
+                <span class="material-symbols-outlined text-white text-2xl">business_center</span>
+            </div>
+            <div>
+                <h2 class="text-lg font-bold text-slate-800">External Training</h2>
+                <p class="text-sm text-slate-500 mt-1">Workshops and certifications by third-party institutes.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 mt-auto pt-3 border-t border-slate-100">
+                {% if summary.get('External') %}
+                <span class="stat-pill bg-emerald-50 text-emerald-600">{{ summary.External.trainers }} Providers</span>
+                <span class="stat-pill bg-teal-50 text-teal-600">{{ summary.External.programs }} Programs</span>
+                <span class="stat-pill bg-slate-100 text-slate-600">{{ summary.External.attendees }} Attendees</span>
+                {% else %}
+                <span class="stat-pill bg-slate-100 text-slate-500">Loading…</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Online -->
+        <div id="card-Online" onclick="selectCategory('Online')"
+             class="training-type-card bg-white rounded-2xl border-2 border-slate-100 p-6 flex flex-col gap-4 shadow-soft">
+            <div class="card-icon-bg w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg">
+                <span class="material-symbols-outlined text-white text-2xl">web</span>
+            </div>
+            <div>
+                <h2 class="text-lg font-bold text-slate-800">Online Training</h2>
+                <p class="text-sm text-slate-500 mt-1">Self-paced courses from global digital learning platforms.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 mt-auto pt-3 border-t border-slate-100">
+                {% if summary.get('Online') %}
+                <span class="stat-pill bg-violet-50 text-violet-600">{{ summary.Online.trainers }} Platforms</span>
+                <span class="stat-pill bg-purple-50 text-purple-600">{{ summary.Online.programs }} Programs</span>
+                <span class="stat-pill bg-slate-100 text-slate-600">{{ summary.Online.attendees }} Attendees</span>
+                {% else %}
+                <span class="stat-pill bg-slate-100 text-slate-500">Loading…</span>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Drill-down Panel -->
+    <div id="drill-panel" class="hidden space-y-4">
+
+        <!-- Breadcrumb -->
+        <nav id="breadcrumb" class="flex items-center gap-1.5 text-sm flex-wrap">
+            <button onclick="resetAll()" class="text-primary hover:underline font-medium">All Categories</button>
+        </nav>
+
+        <!-- 3 Columns -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+            <!-- Column 1: Trainers -->
+            <div id="col-trainers" class="col-panel bg-white rounded-2xl border border-slate-200 shadow-soft overflow-hidden">
+                <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-lg">person</span>
+                        <h3 id="col1-title" class="font-semibold text-slate-700 text-sm">Trainers</h3>
+                    </div>
+                    <span id="col1-count" class="text-xs text-slate-400"></span>
+                </div>
+                <div id="trainer-list" class="divide-y divide-slate-50 max-h-[480px] overflow-y-auto">
+                    <div class="flex items-center justify-center py-10"><div class="spinner"></div></div>
+                </div>
+            </div>
+
+            <!-- Column 2: Programs -->
+            <div id="col-programs" class="col-panel bg-white rounded-2xl border border-slate-200 shadow-soft overflow-hidden hidden-panel">
+                <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-lg">menu_book</span>
+                        <h3 class="font-semibold text-slate-700 text-sm">Training Programs</h3>
+                    </div>
+                    <span id="col2-count" class="text-xs text-slate-400"></span>
+                </div>
+                <div id="program-list" class="divide-y divide-slate-50 max-h-[480px] overflow-y-auto">
+                    <p class="text-slate-400 text-sm text-center py-10 px-4">Select a trainer to see programs.</p>
+                </div>
+            </div>
+
+            <!-- Column 3: Employees -->
+            <div id="col-employees" class="col-panel bg-white rounded-2xl border border-slate-200 shadow-soft overflow-hidden hidden-panel">
+                <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-lg">group</span>
+                        <h3 class="font-semibold text-slate-700 text-sm">Attendees</h3>
+                    </div>
+                    <span id="col3-count" class="text-xs text-slate-400"></span>
+                </div>
+                <div id="employee-list" class="p-4 max-h-[480px] overflow-y-auto">
+                    <p class="text-slate-400 text-sm text-center py-10 px-4">Select a program to see attendees.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let state = { category: null, trainer: null, program: null };
+
+    // ── Select Category ───────────────────────────────────────────────────────
+    async function selectCategory(category) {
+        state = { category, trainer: null, program: null };
+
+        ['Internal','External','Online'].forEach(c =>
+            document.getElementById(`card-${c}`).classList.toggle('active', c === category)
+        );
+
+        const panel = document.getElementById('drill-panel');
+        panel.classList.remove('hidden');
+        panel.classList.add('entering');
+        requestAnimationFrame(() => requestAnimationFrame(() => panel.classList.remove('entering')));
+
+        const col1Labels = { Internal:'Trainers', External:'Providers', Online:'Platforms' };
+        document.getElementById('col1-title').textContent = col1Labels[category] || 'Trainers';
+        document.getElementById('col1-count').textContent = '';
+
+        resetCol('col-programs','program-list','<p class="text-slate-400 text-sm text-center py-10 px-4">Select a trainer to see programs.</p>','col2-count');
+        resetCol('col-employees','employee-list','<p class="text-slate-400 text-sm text-center py-10 px-4">Select a program to see attendees.</p>','col3-count');
+        document.getElementById('col-programs').classList.add('hidden-panel');
+        document.getElementById('col-employees').classList.add('hidden-panel');
+
+        showLoading('trainer-list');
+
+        try {
+            const res  = await fetch(`/trainings/type/${encodeURIComponent(category)}`);
+            const data = await readJsonResponse(res);
+            if (data.error) throw new Error(data.error);
+            document.getElementById('col1-count').textContent = `${data.trainers.length} found`;
+            renderTrainers(data.trainers, category);
+        } catch(e) {
+            document.getElementById('trainer-list').innerHTML =
+                `<p class="text-red-400 text-sm text-center py-10 px-4">⚠ ${escHTML(e.message)}</p>`;
+        }
+        updateBreadcrumb();
+    }
+
+    // ── Render Trainers ───────────────────────────────────────────────────────
+    function renderTrainers(trainers, category) {
+        const list = document.getElementById('trainer-list');
+        if (!trainers.length) {
+            list.innerHTML = '<p class="text-slate-400 text-sm text-center py-10">No trainers found.</p>';
+            return;
+        }
+        list.innerHTML = trainers.map((t, i) => `
+            <div id="trainer-item-${i}"
+                 class="drill-item px-5 py-3 flex items-center justify-between gap-2"
+                 onclick="selectTrainer('${escJS(category)}','${escJS(t.name)}',${i})">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-8 h-8 rounded-full bg-primary/10 flex-shrink-0 flex items-center justify-center">
+                        <span class="text-primary font-bold text-xs">${t.name.charAt(0)}</span>
+                    </div>
+                    <span class="text-sm text-slate-700 font-medium truncate">${escHTML(t.name)}</span>
+                </div>
+                <div class="flex items-center gap-1.5 flex-shrink-0">
+                    <span class="stat-pill bg-blue-50 text-blue-600">${t.programs}P</span>
+                    <span class="stat-pill bg-slate-100 text-slate-500">${t.attendees}E</span>
+                    <span class="material-symbols-outlined text-slate-300 text-base ml-1">chevron_right</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // ── Select Trainer ────────────────────────────────────────────────────────
+    async function selectTrainer(category, trainer, idx) {
+        state.trainer = trainer;
+        state.program = null;
+
+        document.querySelectorAll('#trainer-list .drill-item').forEach(el => el.classList.remove('active-item'));
+        document.getElementById(`trainer-item-${idx}`)?.classList.add('active-item');
+
+        document.getElementById('col-programs').classList.remove('hidden-panel');
+        document.getElementById('col2-count').textContent = '';
+        showLoading('program-list');
+
+        resetCol('col-employees','employee-list','<p class="text-slate-400 text-sm text-center py-10 px-4">Select a program to see attendees.</p>','col3-count');
+        document.getElementById('col-employees').classList.add('hidden-panel');
+
+        try {
+            const res  = await fetch(`/trainings/${encodeURIComponent(category)}/${encodeURIComponent(trainer)}`);
+            const data = await readJsonResponse(res);
+            if (data.error) throw new Error(data.error);
+            document.getElementById('col2-count').textContent = `${data.programs.length} found`;
+            renderPrograms(data.programs, category, data.trainer);
+        } catch(e) {
+            document.getElementById('program-list').innerHTML =
+                `<p class="text-red-400 text-sm text-center py-10 px-4">⚠ ${escHTML(e.message)}</p>`;
+        }
+        updateBreadcrumb();
+    }
+
+    // ── Render Programs ───────────────────────────────────────────────────────
+    function renderPrograms(programs, category, trainer) {
+        const list = document.getElementById('program-list');
+        if (!programs.length) {
+            list.innerHTML = '<p class="text-slate-400 text-sm text-center py-10">No programs found.</p>';
+            return;
+        }
+        list.innerHTML = programs.map((p, i) => `
+            <div id="program-item-${i}"
+                 class="drill-item px-5 py-3 flex items-center justify-between gap-2"
+                 onclick="selectProgram('${escJS(category)}','${escJS(trainer)}','${escJS(p.name)}',${i})">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-7 h-7 rounded-lg bg-slate-100 flex-shrink-0 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-slate-400 text-sm">menu_book</span>
+                    </div>
+                    <span class="text-sm text-slate-700 truncate" title="${escHTML(p.name)}">${escHTML(p.name)}</span>
+                </div>
+                <div class="flex items-center gap-1.5 flex-shrink-0">
+                    <span class="stat-pill bg-emerald-50 text-emerald-600">${p.attendees} emp</span>
+                    <span class="stat-pill bg-slate-100 text-slate-500">${p.hours}hr</span>
+                    <span class="material-symbols-outlined text-slate-300 text-base ml-1">chevron_right</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // ── Select Program ────────────────────────────────────────────────────────
+    async function selectProgram(category, trainer, program, idx) {
+        state.program = program;
+
+        document.querySelectorAll('#program-list .drill-item').forEach(el => el.classList.remove('active-item'));
+        document.getElementById(`program-item-${idx}`)?.classList.add('active-item');
+
+        document.getElementById('col-employees').classList.remove('hidden-panel');
+        document.getElementById('col3-count').textContent = '';
+        showLoading('employee-list');
+
+        try {
+            const params = new URLSearchParams({ category, trainer, training: program });
+            const res  = await fetch(`/trainings/attendance?${params.toString()}`);
+            const data = await readJsonResponse(res);
+            if (data.error) throw new Error(data.error);
+            document.getElementById('col3-count').textContent = `${data.count} attendees · ${data.total_hours}hr`;
+            renderEmployees(data.employees, data.count);
+        } catch(e) {
+            document.getElementById('employee-list').innerHTML =
+                `<p class="text-red-400 text-sm text-center py-10 px-4">⚠ ${escHTML(e.message)}</p>`;
+        }
+        updateBreadcrumb();
+    }
+
+    // ── Render Employees ──────────────────────────────────────────────────────
+    function renderEmployees(employees, count) {
+        const list = document.getElementById('employee-list');
+        if (!employees.length) {
+            list.innerHTML = '<p class="text-slate-400 text-sm text-center py-10">No attendees found.</p>';
+            return;
+        }
+        const statusColors = {
+            'active':   'bg-green-50 text-green-600',
+            'inactive': 'bg-red-50 text-red-500',
+        };
+        list.innerHTML = `
+            <div class="space-y-2">
+                ${employees.map(emp => {
+                    const name   = emp.name     || emp.emp_id || '—';
+                    const dept   = emp.Department || emp.department || '';
+                    const bu     = emp['Business Unit'] || emp.business_unit || '';
+                    const status = String(emp.status || '').toLowerCase();
+                    const sBadge = statusColors[status] || 'bg-slate-100 text-slate-500';
+                    return `
+                    <div class="emp-chip flex items-center gap-3 px-3 py-2.5 bg-slate-50 rounded-xl border border-slate-100">
+                        <div class="w-8 h-8 rounded-full bg-primary/15 flex-shrink-0 flex items-center justify-center">
+                            <span class="text-primary font-bold text-xs">${name.charAt(0)}</span>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="text-sm font-semibold text-slate-700 truncate">${escHTML(name)}</div>
+                            <div class="text-xs text-slate-400 truncate">${escHTML(dept)}${dept && bu ? ' · ' : ''}${escHTML(bu)}</div>
+                        </div>
+                        ${emp.status ? `<span class="stat-pill ${sBadge} flex-shrink-0">${escHTML(emp.status)}</span>` : ''}
+                    </div>`;
+                }).join('')}
+            </div>`;
+    }
+
+    // ── Breadcrumb ────────────────────────────────────────────────────────────
+    function updateBreadcrumb() {
+        const bc = document.getElementById('breadcrumb');
+        let html = `<button onclick="resetAll()" class="text-primary hover:underline font-medium">All Categories</button>`;
+        if (state.category) {
+            html += `<span class="breadcrumb-sep">›</span>
+                     <button onclick="selectCategory('${escJS(state.category)}')" class="text-primary hover:underline font-medium">${escHTML(state.category)}</button>`;
+        }
+        if (state.trainer) {
+            html += `<span class="breadcrumb-sep">›</span>
+                     <button onclick="selectTrainer('${escJS(state.category)}','${escJS(state.trainer)}',-1)" class="text-primary hover:underline font-medium">${escHTML(state.trainer)}</button>`;
+        }
+        if (state.program) {
+            html += `<span class="breadcrumb-sep">›</span>
+                     <span class="text-slate-600 font-medium">${escHTML(state.program)}</span>`;
+        }
+        bc.innerHTML = html;
+    }
+
+    // ── Reset All ─────────────────────────────────────────────────────────────
+    function resetAll() {
+        state = { category:null, trainer:null, program:null };
+        ['Internal','External','Online'].forEach(c =>
+            document.getElementById(`card-${c}`).classList.remove('active')
+        );
+        document.getElementById('drill-panel').classList.add('hidden');
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    function showLoading(id) {
+        document.getElementById(id).innerHTML =
+            `<div class="flex items-center justify-center py-10"><div class="spinner"></div></div>`;
+    }
+    async function readJsonResponse(res) {
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || `Request failed with status ${res.status}`);
+            return data;
+        }
+        const text = await res.text();
+        if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
+        throw new Error(text || 'Unexpected server response');
+    }
+    function resetCol(colId, listId, placeholder, countId) {
+        document.getElementById(listId).innerHTML = placeholder;
+        if (countId) document.getElementById(countId).textContent = '';
+    }
+    function escHTML(str) {
+        const d = document.createElement('div');
+        d.appendChild(document.createTextNode(String(str)));
+        return d.innerHTML;
+    }
+    function escJS(str) {
+        return String(str).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    }
+</script>
+{% endblock %}
