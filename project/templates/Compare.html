@@ -293,8 +293,9 @@
         background-color: #f8fafc;
         border: 1px solid #e2e8f0;
         border-radius: 9px;
-        padding: 0.5rem 2rem 0.5rem 0.75rem;
-        font-size: 0.8125rem;
+        padding: 0.38rem 1.9rem 0.38rem 0.7rem;
+        min-height: 36px;
+        font-size: 0.8rem;
         font-weight: 600;
         color: #334155;
         cursor: pointer;
@@ -731,7 +732,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="compare-page">
+<div class="compare-page container-fluid px-0">
 
     <!-- ═══════════════════════════════════════════════════════
          PAGE HEADER
@@ -769,7 +770,7 @@
             <div class="filter-row">
                 <div class="filter-group">
                     <label class="filter-label" for="f_year_a">Baseline year</label>
-                    <select id="f_year_a" name="year_a" class="filter-select">
+                    <select id="f_year_a" name="year_a" class="filter-select app-select">
                         {% for yr in available_years %}
                         <option value="{{ yr }}" {% if yr==year_a %}selected{% endif %}>{{ yr }}</option>
                         {% endfor %}
@@ -777,7 +778,7 @@
                 </div>
                 <div class="filter-group">
                     <label class="filter-label" for="f_year_b">Compare year</label>
-                    <select id="f_year_b" name="year_b" class="filter-select">
+                    <select id="f_year_b" name="year_b" class="filter-select app-select">
                         {% for yr in available_years %}
                         <option value="{{ yr }}" {% if yr==year_b %}selected{% endif %}>{{ yr }}</option>
                         {% endfor %}
@@ -785,7 +786,7 @@
                 </div>
                 <div class="filter-group">
                     <label class="filter-label" for="f_dimension">Compare by</label>
-                    <select id="f_dimension" name="dimension" class="filter-select">
+                    <select id="f_dimension" name="dimension" class="filter-select app-select">
                         {% for key, label in variable_options.items() %}
                         <option value="{{ key }}" {% if key==dimension %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
@@ -793,7 +794,7 @@
                 </div>
                 <div class="filter-group">
                     <label class="filter-label" for="f_metric">Metric</label>
-                    <select id="f_metric" name="metric" class="filter-select">
+                    <select id="f_metric" name="metric" class="filter-select app-select">
                         {% for key, label in metric_options.items() %}
                         <option value="{{ key }}" {% if key==metric_key %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
@@ -801,7 +802,7 @@
                 </div>
                 <div class="filter-group">
                     <label class="filter-label" for="f_quarter">Quarter</label>
-                    <select id="f_quarter" name="quarter" class="filter-select">
+                    <select id="f_quarter" name="quarter" class="filter-select app-select">
                         <option value="All" {% if quarter_focus=='All' %}selected{% endif %}>All quarters</option>
                         {% for q in quarter_options %}
                         <option value="{{ q }}" {% if q==quarter_focus %}selected{% endif %}>{{ q }}</option>
@@ -819,7 +820,7 @@
             <div class="filter-row">
                 <div class="filter-group">
                     <label class="filter-label" for="f_dept">Department</label>
-                    <select id="f_dept" name="department" class="filter-select">
+                    <select id="f_dept" name="department" class="filter-select app-select">
                         <option value="All">All departments</option>
                         {% for item in filter_options.departments %}
                         <option value="{{ item }}" {% if item==department_filter %}selected{% endif %}>{{ item }}
@@ -829,7 +830,7 @@
                 </div>
                 <div class="filter-group">
                     <label class="filter-label" for="f_bu">Business unit</label>
-                    <select id="f_bu" name="business_unit" class="filter-select">
+                    <select id="f_bu" name="business_unit" class="filter-select app-select">
                         <option value="All">All business units</option>
                         {% for item in filter_options.business_units %}
                         <option value="{{ item }}" {% if item==business_unit_filter %}selected{% endif %}>{{ item }}
@@ -839,7 +840,7 @@
                 </div>
                 <div class="filter-group">
                     <label class="filter-label" for="f_type">Training type</label>
-                    <select id="f_type" name="training_type" class="filter-select">
+                    <select id="f_type" name="training_type" class="filter-select app-select">
                         <option value="All">All types</option>
                         {% for item in filter_options.training_types %}
                         <option value="{{ item }}" {% if item==training_type_filter %}selected{% endif %}>{{ item }}
@@ -849,7 +850,7 @@
                 </div>
                 <div class="filter-group">
                     <label class="filter-label" for="f_status">Training status</label>
-                    <select id="f_status" name="training_status" class="filter-select">
+                    <select id="f_status" name="training_status" class="filter-select app-select">
                         <option value="All">All statuses</option>
                         {% for item in filter_options.training_statuses %}
                         <option value="{{ item }}" {% if item==training_status_filter %}selected{% endif %}>{{ item }}
@@ -903,9 +904,10 @@
     ('Completed (20+hr)', summary_a.completed_employees, summary_b.completed_employees,
     summary_deltas.completed_employees, summary_deltas.completed_employees_up, 'workspace_premium'),
     ] %}
-    <div class="grid-6">
+    <div class="row g-3">
         {% for label, val_a, val_b, delta, is_up, icon in kpi_items %}
-        <div class="kpi-card">
+        <div class="col-12 col-sm-6 col-lg-4 col-xxl-2">
+        <div class="kpi-card h-100">
             <div class="kpi-top">
                 <span class="kpi-label">{{ label }}</span>
                 <span class="material-symbols-outlined kpi-icon">{{ icon }}</span>
@@ -926,6 +928,7 @@
                 {{ delta }} vs {{ comparison_ref_a }}
             </div>
         </div>
+        </div>
         {% endfor %}
     </div>
 
@@ -933,10 +936,11 @@
     <!-- ═══════════════════════════════════════════════════════
          CHARTS ROW
     ════════════════════════════════════════════════════════ -->
-    <div class="grid-7-5">
+    <div class="row g-3">
 
         <!-- Bar Chart -->
-        <div class="card">
+        <div class="col-12 col-xl-7">
+        <div class="card h-100">
             <div class="card-header">
                 <div class="card-header-left">
                     <span class="card-title">{{ metric_options[metric_key] }} by {{ variable_options[dimension]
@@ -962,9 +966,11 @@
                 </div>
             </div>
         </div>
+        </div>
 
         <!-- Quarter Line Chart -->
-        <div class="card">
+        <div class="col-12 col-xl-5">
+        <div class="card h-100">
             <div class="card-header">
                 <div class="card-header-left">
                     <span class="card-title">Quarterly trend</span>
@@ -989,16 +995,18 @@
                 </div>
             </div>
         </div>
+        </div>
     </div>
 
 
     <!-- ═══════════════════════════════════════════════════════
          DETAIL TABLES ROW
     ════════════════════════════════════════════════════════ -->
-    <div class="grid-8-4">
+    <div class="row g-3">
 
         <!-- ── Breakdown Table ── -->
-        <div class="card">
+        <div class="col-12 col-xl-8">
+        <div class="card h-100">
             <div class="card-header">
                 <div class="card-header-left">
                     <span class="card-title">{{ variable_options[dimension] }} breakdown</span>
@@ -1063,9 +1071,11 @@
                 </table>
             </div>
         </div>
+        </div>
 
         <!-- ── Quarter Matrix ── -->
-        <div class="card">
+        <div class="col-12 col-xl-4">
+        <div class="card h-100">
             <div class="card-header">
                 <div class="card-header-left">
                     <span class="card-title">Quarter matrix</span>
@@ -1135,6 +1145,7 @@
                     </div>
                 </div>
             </div>
+        </div>
         </div>
 
     </div><!-- end tables row -->

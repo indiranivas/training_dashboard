@@ -23,7 +23,7 @@
         <form method="GET" action="/" class="flex flex-wrap items-center gap-3">
             <div class="relative">
                 <select name="department" onchange="this.form.submit()"
-                    class="appearance-none bg-white border border-slate-200 hover:border-slate-300 rounded-lg text-sm pl-4 pr-10 py-2 focus:ring-2 focus:ring-primary/20 focus:border-primary font-medium text-slate-700 shadow-sm transition-all cursor-pointer">
+                    class="app-select appearance-none bg-white border border-slate-200 hover:border-slate-300 rounded-lg text-sm pl-4 pr-10 py-2 focus:ring-2 focus:ring-primary/20 focus:border-primary font-medium text-slate-700 shadow-sm transition-all cursor-pointer">
                     <option value="All" {% if dept_filter=='All' %}selected{% endif %}>All Departments</option>
                     {% for d in departments %}
                     <option value="{{ d }}" {% if dept_filter==d %}selected{% endif %}>{{ d }}</option>
@@ -32,7 +32,7 @@
             </div>
             <div class="relative">
                 <select name="business_unit" onchange="this.form.submit()"
-                    class="appearance-none bg-white border border-slate-200 hover:border-slate-300 rounded-lg text-sm pl-4 pr-10 py-2 focus:ring-2 focus:ring-primary/20 focus:border-primary font-medium text-slate-700 shadow-sm transition-all cursor-pointer">
+                    class="app-select appearance-none bg-white border border-slate-200 hover:border-slate-300 rounded-lg text-sm pl-4 pr-10 py-2 focus:ring-2 focus:ring-primary/20 focus:border-primary font-medium text-slate-700 shadow-sm transition-all cursor-pointer">
                     <option value="All" {% if bu_filter=='All' %}selected{% endif %}>All Business Units</option>
                     {% for b in business_units %}
                     <option value="{{ b }}" {% if bu_filter==b %}selected{% endif %}>{{ b }}</option>

@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, render_template, request
 import pandas as pd
-from data_processor import load_data
+from project.data_processor import load_data
 import re
 
 trainings_bp = Blueprint('trainings', __name__)

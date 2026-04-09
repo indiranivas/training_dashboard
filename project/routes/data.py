@@ -2,7 +2,7 @@ import os
 import re
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from werkzeug.utils import secure_filename
-from data_processor import set_active_year, get_active_year, set_live_link, get_live_link
+from project.data_processor import set_active_year, get_active_year, set_live_link, get_live_link
 
 data_bp = Blueprint('data', __name__)
 

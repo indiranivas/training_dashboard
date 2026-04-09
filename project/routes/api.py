@@ -1,8 +1,8 @@
 from flask import Blueprint, request, jsonify, send_file
 import pandas as pd
 from io import BytesIO
-from data_processor import load_data, compute_metrics
-from genai_helper import (
+from project.data_processor import load_data, compute_metrics
+from project.genai_helper import (
     generate_query_plan,
     execute_query_plan,
     generate_rag_response,
@@ -308,8 +308,10 @@ def export_excel():
             max_row,
             cat_col,
             chart_type='bar',
-            width=8.0,
-            height=5.2,
+            width=8.4,
+            height=5.6,
+            x_axis_title='',
+            y_axis_title='',
         ):
             if max_row <= min_row:
                 return
@@ -334,8 +336,12 @@ def export_excel():
             chart.legend = None
             chart.x_axis.majorGridlines = None
             chart.y_axis.majorGridlines = None
-            chart.x_axis.title = None
-            chart.y_axis.title = None
+            chart.x_axis.title = x_axis_title
+            chart.y_axis.title = y_axis_title
+            chart.x_axis.tickLblPos = 'nextTo'
+            chart.y_axis.tickLblPos = 'nextTo'
+            chart.x_axis.title.overlay = False
+            chart.y_axis.title.overlay = False
             chart.dataLabels = DataLabelList()
             chart.dataLabels.showVal = True
             chart.dataLabels.showCatName = False
@@ -422,6 +428,8 @@ def export_excel():
                 writer.sheets['Dept Completion'].max_row,
                 1,
                 'bar',
+                x_axis_title='Department',
+                y_axis_title='Completion %',
             )
             add_bar_chart(
                 charts_ws,
@@ -434,6 +442,8 @@ def export_excel():
                 writer.sheets['BU Completion'].max_row,
                 1,
                 'bar',
+                x_axis_title='Business Unit',
+                y_axis_title='Completion %',
             )
             add_bar_chart(
                 charts_ws,
@@ -446,6 +456,8 @@ def export_excel():
                 writer.sheets['Training Type Share'].max_row,
                 1,
                 'col',
+                x_axis_title='Training Type',
+                y_axis_title='Share %',
             )
             add_bar_chart(
                 charts_ws,
@@ -458,6 +470,8 @@ def export_excel():
                 writer.sheets['20H+ Type Share'].max_row,
                 1,
                 'col',
+                x_axis_title='Training Type',
+                y_axis_title='20H+ Share %',
             )
             add_bar_chart(
                 charts_ws,
@@ -470,6 +484,8 @@ def export_excel():
                 writer.sheets['Hours Distribution'].max_row,
                 1,
                 'col',
+                x_axis_title='Hours Category',
+                y_axis_title='Employees',
             )
 
             # Auto-adjust column widths for every exported sheet

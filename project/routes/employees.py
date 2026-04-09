@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request
 import pandas as pd
-from data_processor import load_data, categorize_hours
+from project.data_processor import load_data, categorize_hours
 
 employees_bp = Blueprint('employees', __name__)
 

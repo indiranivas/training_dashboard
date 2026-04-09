@@ -4,6 +4,9 @@
 
 {% block extra_head %}
 <style>
+    .hidden { display: none !important; }
+    .muted-note { color: #64748b; font-size: 0.875rem; }
+
     /* ── Card Animations ── */
     .training-type-card {
         transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease, border-color 0.2s ease;
@@ -56,24 +59,34 @@
 
     /* ── Breadcrumb ── */
     .breadcrumb-sep { color:#94a3b8; }
+
+    @media (max-width: 991.98px) {
+        .col-panel.hidden-panel {
+            display: none;
+            opacity: 0;
+            transform: none;
+            pointer-events: none;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="p-8 space-y-8">
+<div class="container-fluid py-3 py-lg-4">
 
     <!-- Page Header -->
-    <div>
-        <h1 class="text-2xl font-bold text-slate-800">Training Management</h1>
+    <div class="mb-4 mb-lg-5">
+        <h1 class="h3 fw-bold mb-1 text-dark">Training Management</h1>
         <p class="text-slate-500 text-sm mt-1">Explore training programs by delivery mode — drill into trainers, programs, and attendees.</p>
     </div>
 
     <!-- Landing Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="row g-3 g-lg-4">
 
         <!-- Internal -->
+        <div class="col-12 col-md-6 col-xl-4">
         <div id="card-Internal" onclick="selectCategory('Internal')"
-             class="training-type-card bg-white rounded-2xl border-2 border-slate-100 p-6 flex flex-col gap-4 shadow-soft">
+             class="training-type-card h-100 bg-white rounded-4 border border-2 border-light p-4 d-flex flex-column gap-3 shadow-sm">
             <div class="card-icon-bg w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
                 <span class="material-symbols-outlined text-white text-2xl">apartment</span>
             </div>
@@ -81,7 +94,7 @@
                 <h2 class="text-lg font-bold text-slate-800">Internal Training</h2>
                 <p class="text-sm text-slate-500 mt-1">Programs delivered by in-house trainers & subject-matter experts.</p>
             </div>
-            <div class="flex flex-wrap items-center gap-2 mt-auto pt-3 border-t border-slate-100">
+            <div class="d-flex flex-wrap align-items-center gap-2 mt-auto pt-3 border-top">
                 {% if summary.get('Internal') %}
                 <span class="stat-pill bg-indigo-50 text-indigo-600">{{ summary.Internal.trainers }} Trainers</span>
                 <span class="stat-pill bg-blue-50 text-blue-600">{{ summary.Internal.programs }} Programs</span>
@@ -91,10 +104,12 @@
                 {% endif %}
             </div>
         </div>
+        </div>
 
         <!-- External -->
+        <div class="col-12 col-md-6 col-xl-4">
         <div id="card-External" onclick="selectCategory('External')"
-             class="training-type-card bg-white rounded-2xl border-2 border-slate-100 p-6 flex flex-col gap-4 shadow-soft">
+             class="training-type-card h-100 bg-white rounded-4 border border-2 border-light p-4 d-flex flex-column gap-3 shadow-sm">
             <div class="card-icon-bg w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
                 <span class="material-symbols-outlined text-white text-2xl">business_center</span>
             </div>
@@ -102,7 +117,7 @@
                 <h2 class="text-lg font-bold text-slate-800">External Training</h2>
                 <p class="text-sm text-slate-500 mt-1">Workshops and certifications by third-party institutes.</p>
             </div>
-            <div class="flex flex-wrap items-center gap-2 mt-auto pt-3 border-t border-slate-100">
+            <div class="d-flex flex-wrap align-items-center gap-2 mt-auto pt-3 border-top">
                 {% if summary.get('External') %}
                 <span class="stat-pill bg-emerald-50 text-emerald-600">{{ summary.External.trainers }} Providers</span>
                 <span class="stat-pill bg-teal-50 text-teal-600">{{ summary.External.programs }} Programs</span>
@@ -112,10 +127,12 @@
                 {% endif %}
             </div>
         </div>
+        </div>
 
         <!-- Online -->
+        <div class="col-12 col-md-6 col-xl-4">
         <div id="card-Online" onclick="selectCategory('Online')"
-             class="training-type-card bg-white rounded-2xl border-2 border-slate-100 p-6 flex flex-col gap-4 shadow-soft">
+             class="training-type-card h-100 bg-white rounded-4 border border-2 border-light p-4 d-flex flex-column gap-3 shadow-sm">
             <div class="card-icon-bg w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg">
                 <span class="material-symbols-outlined text-white text-2xl">web</span>
             </div>
@@ -123,7 +140,7 @@
                 <h2 class="text-lg font-bold text-slate-800">Online Training</h2>
                 <p class="text-sm text-slate-500 mt-1">Self-paced courses from global digital learning platforms.</p>
             </div>
-            <div class="flex flex-wrap items-center gap-2 mt-auto pt-3 border-t border-slate-100">
+            <div class="d-flex flex-wrap align-items-center gap-2 mt-auto pt-3 border-top">
                 {% if summary.get('Online') %}
                 <span class="stat-pill bg-violet-50 text-violet-600">{{ summary.Online.trainers }} Platforms</span>
                 <span class="stat-pill bg-purple-50 text-purple-600">{{ summary.Online.programs }} Programs</span>
@@ -133,60 +150,67 @@
                 {% endif %}
             </div>
         </div>
+        </div>
 
     </div>
 
     <!-- Drill-down Panel -->
-    <div id="drill-panel" class="hidden space-y-4">
+    <div id="drill-panel" class="hidden mt-4">
 
         <!-- Breadcrumb -->
-        <nav id="breadcrumb" class="flex items-center gap-1.5 text-sm flex-wrap">
-            <button onclick="resetAll()" class="text-primary hover:underline font-medium">All Categories</button>
+        <nav id="breadcrumb" class="d-flex align-items-center flex-wrap gap-2 mb-3">
+            <button onclick="resetAll()" class="btn btn-link p-0 text-decoration-none fw-semibold">All Categories</button>
         </nav>
 
         <!-- 3 Columns -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div class="row g-3">
 
             <!-- Column 1: Trainers -->
-            <div id="col-trainers" class="col-panel bg-white rounded-2xl border border-slate-200 shadow-soft overflow-hidden">
-                <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between">
-                    <div class="flex items-center gap-2">
+            <div class="col-12 col-xl-4">
+            <div id="col-trainers" class="col-panel card border-0 shadow-sm overflow-hidden h-100">
+                <div class="card-header bg-white d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
                         <span class="material-symbols-outlined text-primary text-lg">person</span>
-                        <h3 id="col1-title" class="font-semibold text-slate-700 text-sm">Trainers</h3>
+                        <h3 id="col1-title" class="h6 fw-semibold text-dark mb-0">Trainers</h3>
                     </div>
-                    <span id="col1-count" class="text-xs text-slate-400"></span>
+                    <span id="col1-count" class="small text-secondary"></span>
                 </div>
-                <div id="trainer-list" class="divide-y divide-slate-50 max-h-[480px] overflow-y-auto">
-                    <div class="flex items-center justify-center py-10"><div class="spinner"></div></div>
+                <div id="trainer-list" class="list-group list-group-flush overflow-auto" style="max-height: 480px;">
+                    <div class="d-flex align-items-center justify-content-center py-5"><div class="spinner"></div></div>
                 </div>
+            </div>
             </div>
 
             <!-- Column 2: Programs -->
-            <div id="col-programs" class="col-panel bg-white rounded-2xl border border-slate-200 shadow-soft overflow-hidden hidden-panel">
-                <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between">
-                    <div class="flex items-center gap-2">
+            <div class="col-12 col-xl-4">
+            <div id="col-programs" class="col-panel card border-0 shadow-sm overflow-hidden h-100 hidden-panel">
+                <div class="card-header bg-white d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
                         <span class="material-symbols-outlined text-primary text-lg">menu_book</span>
-                        <h3 class="font-semibold text-slate-700 text-sm">Training Programs</h3>
+                        <h3 class="h6 fw-semibold text-dark mb-0">Training Programs</h3>
                     </div>
-                    <span id="col2-count" class="text-xs text-slate-400"></span>
+                    <span id="col2-count" class="small text-secondary"></span>
                 </div>
-                <div id="program-list" class="divide-y divide-slate-50 max-h-[480px] overflow-y-auto">
-                    <p class="text-slate-400 text-sm text-center py-10 px-4">Select a trainer to see programs.</p>
+                <div id="program-list" class="list-group list-group-flush overflow-auto" style="max-height: 480px;">
+                    <p class="text-secondary small text-center py-5 px-4 mb-0">Select a trainer to see programs.</p>
                 </div>
+            </div>
             </div>
 
             <!-- Column 3: Employees -->
-            <div id="col-employees" class="col-panel bg-white rounded-2xl border border-slate-200 shadow-soft overflow-hidden hidden-panel">
-                <div class="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between">
-                    <div class="flex items-center gap-2">
+            <div class="col-12 col-xl-4">
+            <div id="col-employees" class="col-panel card border-0 shadow-sm overflow-hidden h-100 hidden-panel">
+                <div class="card-header bg-white d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
                         <span class="material-symbols-outlined text-primary text-lg">group</span>
-                        <h3 class="font-semibold text-slate-700 text-sm">Attendees</h3>
+                        <h3 class="h6 fw-semibold text-dark mb-0">Attendees</h3>
                     </div>
-                    <span id="col3-count" class="text-xs text-slate-400"></span>
+                    <span id="col3-count" class="small text-secondary"></span>
                 </div>
-                <div id="employee-list" class="p-4 max-h-[480px] overflow-y-auto">
-                    <p class="text-slate-400 text-sm text-center py-10 px-4">Select a program to see attendees.</p>
+                <div id="employee-list" class="p-3 overflow-auto" style="max-height: 480px;">
+                    <p class="text-secondary small text-center py-5 px-4 mb-0">Select a program to see attendees.</p>
                 </div>
+            </div>
             </div>
         </div>
     </div>
@@ -210,13 +234,16 @@
         panel.classList.remove('hidden');
         panel.classList.add('entering');
         requestAnimationFrame(() => requestAnimationFrame(() => panel.classList.remove('entering')));
+        if (window.innerWidth < 992) {
+            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
 
         const col1Labels = { Internal:'Trainers', External:'Providers', Online:'Platforms' };
         document.getElementById('col1-title').textContent = col1Labels[category] || 'Trainers';
         document.getElementById('col1-count').textContent = '';
 
-        resetCol('col-programs','program-list','<p class="text-slate-400 text-sm text-center py-10 px-4">Select a trainer to see programs.</p>','col2-count');
-        resetCol('col-employees','employee-list','<p class="text-slate-400 text-sm text-center py-10 px-4">Select a program to see attendees.</p>','col3-count');
+        resetCol('col-programs','program-list','<p class="text-secondary small text-center py-5 px-4 mb-0">Select a trainer to see programs.</p>','col2-count');
+        resetCol('col-employees','employee-list','<p class="text-secondary small text-center py-5 px-4 mb-0">Select a program to see attendees.</p>','col3-count');
         document.getElementById('col-programs').classList.add('hidden-panel');
         document.getElementById('col-employees').classList.add('hidden-panel');
 
@@ -230,7 +257,7 @@
             renderTrainers(data.trainers, category);
         } catch(e) {
             document.getElementById('trainer-list').innerHTML =
-                `<p class="text-red-400 text-sm text-center py-10 px-4">⚠ ${escHTML(e.message)}</p>`;
+                `<p class="text-danger small text-center py-5 px-4 mb-0">⚠ ${escHTML(e.message)}</p>`;
         }
         updateBreadcrumb();
     }
@@ -239,7 +266,7 @@
     function renderTrainers(trainers, category) {
         const list = document.getElementById('trainer-list');
         if (!trainers.length) {
-            list.innerHTML = '<p class="text-slate-400 text-sm text-center py-10">No trainers found.</p>';
+            list.innerHTML = '<p class="text-secondary small text-center py-5 mb-0">No trainers found.</p>';
             return;
         }
         list.innerHTML = trainers.map((t, i) => `
@@ -270,10 +297,13 @@
         document.getElementById(`trainer-item-${idx}`)?.classList.add('active-item');
 
         document.getElementById('col-programs').classList.remove('hidden-panel');
+        if (window.innerWidth < 992) {
+            document.getElementById('col-programs').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
         document.getElementById('col2-count').textContent = '';
         showLoading('program-list');
 
-        resetCol('col-employees','employee-list','<p class="text-slate-400 text-sm text-center py-10 px-4">Select a program to see attendees.</p>','col3-count');
+        resetCol('col-employees','employee-list','<p class="text-secondary small text-center py-5 px-4 mb-0">Select a program to see attendees.</p>','col3-count');
         document.getElementById('col-employees').classList.add('hidden-panel');
 
         try {
@@ -284,7 +314,7 @@
             renderPrograms(data.programs, category, data.trainer);
         } catch(e) {
             document.getElementById('program-list').innerHTML =
-                `<p class="text-red-400 text-sm text-center py-10 px-4">⚠ ${escHTML(e.message)}</p>`;
+                `<p class="text-danger small text-center py-5 px-4 mb-0">⚠ ${escHTML(e.message)}</p>`;
         }
         updateBreadcrumb();
     }
@@ -293,7 +323,7 @@
     function renderPrograms(programs, category, trainer) {
         const list = document.getElementById('program-list');
         if (!programs.length) {
-            list.innerHTML = '<p class="text-slate-400 text-sm text-center py-10">No programs found.</p>';
+            list.innerHTML = '<p class="text-secondary small text-center py-5 mb-0">No programs found.</p>';
             return;
         }
         list.innerHTML = programs.map((p, i) => `
@@ -323,6 +353,9 @@
         document.getElementById(`program-item-${idx}`)?.classList.add('active-item');
 
         document.getElementById('col-employees').classList.remove('hidden-panel');
+        if (window.innerWidth < 992) {
+            document.getElementById('col-employees').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
         document.getElementById('col3-count').textContent = '';
         showLoading('employee-list');
 
@@ -335,7 +368,7 @@
             renderEmployees(data.employees, data.count);
         } catch(e) {
             document.getElementById('employee-list').innerHTML =
-                `<p class="text-red-400 text-sm text-center py-10 px-4">⚠ ${escHTML(e.message)}</p>`;
+                `<p class="text-danger small text-center py-5 px-4 mb-0">⚠ ${escHTML(e.message)}</p>`;
         }
         updateBreadcrumb();
     }
@@ -344,7 +377,7 @@
     function renderEmployees(employees, count) {
         const list = document.getElementById('employee-list');
         if (!employees.length) {
-            list.innerHTML = '<p class="text-slate-400 text-sm text-center py-10">No attendees found.</p>';
+            list.innerHTML = '<p class="text-secondary small text-center py-5 mb-0">No attendees found.</p>';
             return;
         }
         const statusColors = {

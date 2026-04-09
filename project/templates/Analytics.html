@@ -6,6 +6,23 @@
 
 {% block header_title %}Analytics Engine{% endblock %}
 
+{% block extra_head %}
+<style>
+    .analytics-toolbar {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 0.9rem;
+    }
+
+    @media (min-width: 992px) {
+        .analytics-toolbar .toolbar-grid {
+            grid-template-columns: 1fr 1fr 0.9fr 1.1fr 1.1fr auto;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block header_context %}
 <div class="h-4 w-[1px] bg-slate-300 mx-2 hidden md:block"></div>
 <div class="hidden md:flex items-center gap-2 text-primary text-sm font-medium">
@@ -16,42 +33,65 @@
 
 {% block context %}
 <script id="insight-context" type="application/json">
-  {{ {"page":"analytics","start_date":request.args.get("start_date"),"end_date":request.args.get("end_date")} | tojson }}
+  {{ {"page":"analytics","start_date":request.args.get("start_date"),"end_date":request.args.get("end_date"),"quarter":quarter_filter,"department":dept_filter,"business_unit":bu_filter} | tojson }}
 </script>
 {% endblock %}
 
 {% block content %}
-<div class="p-8 space-y-8">
+<div class="container-fluid py-3 py-lg-4">
     <!-- Contextual Header & Actions -->
-    <div class="flex justify-between items-end pb-4 border-b border-slate-200">
-        <div>
-            <h3 class="text-3xl font-black text-slate-800 tracking-tight leading-none mb-2">Detailed Analytics</h3>
-            <p class="text-slate-500 text-sm max-w-md">Comprehensive analysis of personnel skill development, departmental growth trajectories, and critical competency gaps.</p>
+    <div class="row g-3 align-items-end pb-3 mb-3 border-bottom">
+        <div class="col-12 col-xl-5">
+            <h3 class="h2 fw-bold text-dark mb-2">Detailed Analytics</h3>
+            <p class="text-secondary small mb-0">Comprehensive analysis of personnel skill development, departmental growth trajectories, and competency gaps.</p>
         </div>
-        <div class="flex flex-wrap items-center gap-3">
-            <form method="GET" action="/analytics" class="flex items-center gap-2 bg-white border border-slate-200 rounded-lg p-1.5 shadow-sm">
-                <input type="date" name="start_date" value="{{ request.args.get('start_date', '') }}" class="px-3 py-1.5 text-xs font-bold text-slate-600 bg-transparent border-none focus:ring-0 cursor-pointer" title="Start Date">
-                <span class="text-slate-300 text-xs font-bold px-1">to</span>
-                <input type="date" name="end_date" value="{{ request.args.get('end_date', '') }}" class="px-3 py-1.5 text-xs font-bold text-slate-600 bg-transparent border-none focus:ring-0 cursor-pointer" title="End Date">
-                <button type="submit" class="p-1.5 bg-primary text-white rounded-md shadow-sm hover:bg-primary-container transition-colors ml-1">
-                    <span class="material-symbols-outlined text-[16px] block">filter_alt</span>
-                </button>
+        <div class="col-12 col-xl-7">
+            <form method="GET" action="/analytics" class="analytics-toolbar">
+                <div class="toolbar-grid d-grid gap-2">
+                    <input type="date" name="start_date" value="{{ request.args.get('start_date', '') }}" class="form-control form-control-sm app-input" title="Start Date">
+                    <input type="date" name="end_date" value="{{ request.args.get('end_date', '') }}" class="form-control form-control-sm app-input" title="End Date">
+                    <select name="quarter" class="form-select form-select-sm app-select">
+                        <option value="All" {% if quarter_filter == 'All' %}selected{% endif %}>Quarter: All</option>
+                        <option value="Q1" {% if quarter_filter == 'Q1' %}selected{% endif %}>Q1</option>
+                        <option value="Q2" {% if quarter_filter == 'Q2' %}selected{% endif %}>Q2</option>
+                        <option value="Q3" {% if quarter_filter == 'Q3' %}selected{% endif %}>Q3</option>
+                        <option value="Q4" {% if quarter_filter == 'Q4' %}selected{% endif %}>Q4</option>
+                    </select>
+                    <select name="department" class="form-select form-select-sm app-select">
+                        <option value="All" {% if dept_filter == 'All' %}selected{% endif %}>All Departments</option>
+                        {% for d in departments %}
+                        <option value="{{ d }}" {% if dept_filter == d %}selected{% endif %}>{{ d }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="business_unit" class="form-select form-select-sm app-select">
+                        <option value="All" {% if bu_filter == 'All' %}selected{% endif %}>All Business Units</option>
+                        {% for b in business_units %}
+                        <option value="{{ b }}" {% if bu_filter == b %}selected{% endif %}>{{ b }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-sm btn-primary px-3">
+                        <span class="material-symbols-outlined align-middle" style="font-size:16px;">filter_alt</span>
+                    </button>
+                </div>
             </form>
-            <div class="relative">
-                <button id="exportBtn" class="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-sm transition-colors group">
-                    <span class="material-symbols-outlined text-sm group-hover:-translate-y-0.5 transition-transform">download</span>
+        </div>
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <a href="/analytics" class="btn btn-sm btn-outline-secondary">Reset Filters</a>
+            <div class="position-relative">
+                <button id="exportBtn" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2">
+                    <span class="material-symbols-outlined" style="font-size:16px;">download</span>
                     Export Data
                 </button>
-                <div id="exportMenu" class="hidden absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-50">
-                    <button onclick="exportToCSV()" class="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-b border-slate-100">
+                <div id="exportMenu" class="d-none position-absolute end-0 mt-2 bg-white border rounded-3 shadow-lg z-3" style="min-width: 220px;">
+                    <button onclick="exportToCSV()" class="btn btn-link w-100 text-start text-decoration-none px-3 py-2 border-bottom d-flex align-items-center gap-2 text-secondary">
                         <span class="material-symbols-outlined text-sm">table_chart</span>
                         Export as CSV
                     </button>
-                    <button onclick="exportToExcel()" class="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2 border-b border-slate-100">
+                    <button onclick="exportToExcel()" class="btn btn-link w-100 text-start text-decoration-none px-3 py-2 border-bottom d-flex align-items-center gap-2 text-secondary">
                         <span class="material-symbols-outlined text-sm">description</span>
                         Export as Excel
                     </button>
-                    <button onclick="exportToPDF()" class="w-full text-left px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2">
+                    <button onclick="exportToPDF()" class="btn btn-link w-100 text-start text-decoration-none px-3 py-2 d-flex align-items-center gap-2 text-secondary">
                         <span class="material-symbols-outlined text-sm">picture_as_pdf</span>
                         Export as PDF
                     </button>
@@ -61,9 +101,10 @@
     </div>
 
     <!-- Bento Grid Layout -->
-    <div class="grid grid-cols-12 gap-6">
+    <div class="row g-3 g-lg-4">
         <!-- Main Trend Chart (Full Width) -->
-        <div class="col-span-12 bg-white p-6 rounded-2xl border border-slate-100 shadow-soft relative overflow-hidden group hover:shadow-md transition-shadow">
+        <div class="col-12">
+        <div class="card border-0 shadow-sm h-100">
             <div class="absolute -right-10 -top-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors"></div>
             <div class="flex justify-between items-center mb-8 relative z-10">
                 <div>
@@ -81,41 +122,49 @@
                     </div>
                 </div>
             </div>
-            <div class="h-64 w-full relative z-10">
+            <div class="card-body pt-0">
+            <div class="position-relative" style="height: 320px;">
                 <canvas id="trendChart"></canvas>
             </div>
+            </div>
+        </div>
         </div>
 
 
 
         <!-- Department-wise Progress (Stacked Bars) -->
-        <div class="col-span-12 lg:col-span-12 bg-white p-8 rounded-2xl border border-slate-100 shadow-soft">
-            <div class="flex justify-between items-center mb-8">
+        <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-4">
                 <div>
                     <h4 class="text-sm font-black text-slate-800 uppercase tracking-wider">Departmental Progress Matrix</h4>
                     <p class="text-xs text-slate-500 mt-1">Comparative completion metrics across operational units.</p>
                 </div>
             </div>
-            <div class="h-80 w-full relative">
+            <div class="position-relative" style="height: 340px;">
                 <canvas id="deptChart"></canvas>
             </div>
+            </div>
+        </div>
         </div>
 
         <!-- Department Hours Categories Section -->
-        <div class="col-span-12 bg-white rounded-2xl shadow-soft border border-slate-100 overflow-hidden">
-            <div class="px-8 py-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50/30">
+        <div class="col-12">
+        <div class="card border-0 shadow-sm overflow-hidden">
+            <div class="card-header bg-white d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                 <div>
                     <h4 class="text-lg font-bold text-slate-800">Department-wise Training Hours Categories</h4>
                     <p class="text-xs text-slate-500 mt-1">Distribution of employees by training hours: A (≥20), B (15-19), C (10-14), D (5-9), E (0.1-4), F (0)</p>
                 </div>
                 <!-- Toggle switches -->
-                <div class="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
-                    <button id="dept-count-btn" onclick="setDeptDisplay('count')" class="px-4 py-1.5 text-xs font-bold rounded-md shadow-sm bg-white text-primary transition-all">Count</button>
-                    <button id="dept-percentage-btn" onclick="setDeptDisplay('percentage')" class="px-4 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-800 transition-all">Percentage %</button>
+                <div class="btn-group btn-group-sm" role="group" aria-label="Department view mode">
+                    <button id="dept-count-btn" onclick="setDeptDisplay('count')" class="btn btn-primary">Count</button>
+                    <button id="dept-percentage-btn" onclick="setDeptDisplay('percentage')" class="btn btn-outline-secondary">Percentage %</button>
                 </div>
             </div>
-            <div class="overflow-x-auto">
-                <table id="dept-hours-table" class="w-full text-left whitespace-nowrap">
+            <div class="table-responsive">
+                <table id="dept-hours-table" class="table table-sm align-middle mb-0">
                     <thead>
                         <tr class="bg-white text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
                             <th class="px-8 py-5">Department</th>
@@ -155,21 +204,23 @@
                 </table>
             </div>
         </div>
+        </div>
 
         <!-- Business Unit Hours Categories Section -->
-        <div class="col-span-12 bg-white rounded-2xl shadow-soft border border-slate-100 overflow-hidden">
-            <div class="px-8 py-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50/30">
+        <div class="col-12">
+        <div class="card border-0 shadow-sm overflow-hidden">
+            <div class="card-header bg-white d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                 <div>
                     <h4 class="text-lg font-bold text-slate-800">Business Unit Training Hours Categories</h4>
                     <p class="text-xs text-slate-500 mt-1">Distribution of employees by training hours within units.</p>
                 </div>
-                <div class="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
-                    <button id="bu-count-btn" onclick="setBuDisplay('count')" class="px-4 py-1.5 text-xs font-bold rounded-md shadow-sm bg-white text-primary transition-all">Count</button>
-                    <button id="bu-percentage-btn" onclick="setBuDisplay('percentage')" class="px-4 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-800 transition-all">Percentage %</button>
+                <div class="btn-group btn-group-sm" role="group" aria-label="Business unit view mode">
+                    <button id="bu-count-btn" onclick="setBuDisplay('count')" class="btn btn-primary">Count</button>
+                    <button id="bu-percentage-btn" onclick="setBuDisplay('percentage')" class="btn btn-outline-secondary">Percentage %</button>
                 </div>
             </div>
-            <div class="overflow-x-auto">
-                <table id="bu-hours-table" class="w-full text-left whitespace-nowrap">
+            <div class="table-responsive">
+                <table id="bu-hours-table" class="table table-sm align-middle mb-0">
                     <thead>
                         <tr class="bg-white text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
                             <th class="px-8 py-5">Business Unit</th>
@@ -209,10 +260,13 @@
                 </table>
             </div>
         </div>
+        </div>
 
         <!-- System Integrations Footer Panel -->
-        <div class="col-span-12 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <button onclick="exportToPDF()" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-soft hover:-translate-y-1 transition-transform cursor-pointer flex items-center gap-5 group">
+        <div class="col-12">
+        <div class="row g-3">
+            <div class="col-12 col-md-6">
+            <button onclick="exportToPDF()" class="btn btn-light border w-100 p-3 d-flex align-items-center gap-3 text-start shadow-sm">
                 <div class="w-14 h-14 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center group-hover:bg-rose-500 group-hover:text-white transition-colors">
                     <span class="material-symbols-outlined text-2xl">picture_as_pdf</span>
                 </div>
@@ -221,7 +275,9 @@
                     <p class="text-xs text-slate-500 mt-1">Download visual report</p>
                 </div>
             </button>
-            <button onclick="exportToExcel()" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-soft hover:-translate-y-1 transition-transform cursor-pointer flex items-center gap-5 group">
+            </div>
+            <div class="col-12 col-md-6">
+            <button onclick="exportToExcel()" class="btn btn-light border w-100 p-3 d-flex align-items-center gap-3 text-start shadow-sm">
                 <div class="w-14 h-14 bg-emerald-50 text-emerald-500 rounded-xl flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-colors">
                     <span class="material-symbols-outlined text-2xl">table_chart</span>
                 </div>
@@ -230,6 +286,9 @@
                     <p class="text-xs text-slate-500 mt-1">Detailed dataset for analysis</p>
                 </div>
             </button>
+            </div>
+        </div>
+        </div>
         </div>
     </div>
 </div>
@@ -349,8 +408,8 @@
         const percBtn = document.getElementById(percBtnId);
         const rows = table.querySelectorAll('tr:not(.bg-primary\\/5)'); // Ignore Total row for loop
 
-        const activeClasses = 'px-4 py-1.5 text-xs font-bold rounded-md shadow-sm bg-white text-primary transition-all';
-        const inactiveClasses = 'px-4 py-1.5 text-xs font-bold rounded-md text-slate-500 hover:text-slate-800 transition-all';
+        const activeClasses = 'btn btn-primary';
+        const inactiveClasses = 'btn btn-outline-secondary';
 
         if (mode === 'percentage') {
             countBtn.className = inactiveClasses;
@@ -426,14 +485,14 @@
     // Export Functions
     document.getElementById('exportBtn').addEventListener('click', function() {
         const menu = document.getElementById('exportMenu');
-        menu.classList.toggle('hidden');
+        menu.classList.toggle('d-none');
     });
 
     document.addEventListener('click', function(event) {
         const exportBtn = document.getElementById('exportBtn');
         const exportMenu = document.getElementById('exportMenu');
         if (!exportBtn.contains(event.target) && !exportMenu.contains(event.target)) {
-            exportMenu.classList.add('hidden');
+            exportMenu.classList.add('d-none');
         }
     });
 

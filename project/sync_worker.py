@@ -2,7 +2,7 @@ import os
 import time
 import requests
 import threading
-from data_processor import get_config
+from project.data_processor import get_config
 
 def sync_job():
     while True:

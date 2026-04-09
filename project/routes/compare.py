@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request
 import pandas as pd
-from data_processor import list_available_years, load_data_for_year, compute_metrics
+from project.data_processor import list_available_years, load_data_for_year, compute_metrics
 
 compare_bp = Blueprint('compare', __name__)
 

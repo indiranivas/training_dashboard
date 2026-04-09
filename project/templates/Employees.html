@@ -12,6 +12,89 @@
         background: rgba(255, 255, 255, 0.8);
         backdrop-filter: blur(12px);
     }
+
+    .emp-mobile-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        background: #fff;
+        padding: 0.875rem;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+    }
+
+    .emp-mobile-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+
+    .emp-mobile-meta {
+        font-size: 0.72rem;
+        color: #64748b;
+    }
+
+    .emp-mobile-chip {
+        font-size: 0.66rem;
+        font-weight: 700;
+        border-radius: 999px;
+        padding: 0.22rem 0.5rem;
+        border: 1px solid transparent;
+        white-space: nowrap;
+    }
+
+    .emp-mobile-chip.active {
+        background: #ecfdf5;
+        color: #047857;
+        border-color: #a7f3d0;
+    }
+
+    .emp-mobile-chip.inactive {
+        background: #f1f5f9;
+        color: #475569;
+        border-color: #e2e8f0;
+    }
+
+    .bu-pills-wrap {
+        overflow-x: auto;
+        scrollbar-width: thin;
+    }
+
+    .bu-pills-row {
+        display: inline-flex;
+        gap: 0.5rem;
+        min-width: max-content;
+    }
+
+    @media (max-width: 767.98px) {
+        .employees-shell {
+            padding: 0.75rem !important;
+            gap: 0.85rem !important;
+        }
+
+        .employees-topbar {
+            padding-bottom: 0.75rem !important;
+            margin-bottom: 0.25rem !important;
+        }
+
+        .employees-topbar h3 {
+            font-size: 1.05rem !important;
+            line-height: 1.2;
+        }
+
+        .employees-filters {
+            gap: 0.6rem !important;
+        }
+
+        .employees-filters select,
+        .employees-filters input[type="text"] {
+            min-height: 42px;
+            font-size: 0.9rem !important;
+        }
+
+        .employees-pagination {
+            padding: 0.75rem !important;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -22,44 +105,46 @@
 {% endblock %}
 
 {% block content %}
-<div class="p-8 space-y-8">
+<div class="employees-shell p-8 space-y-8">
     <!-- Header & Primary Actions -->
-    <div class="flex justify-between items-end pb-4 border-b border-slate-200">
+    <div class="employees-topbar flex flex-col md:flex-row justify-between md:items-end gap-3 pb-4 border-b border-slate-200">
         <div class="space-y-1">
             <h3 class="text-3xl font-extrabold text-slate-800 tracking-tight">Talent Ecosystem</h3>
             <p class="text-slate-500 text-sm">Managing {{ all_count }} employees across {{ business_units|length }} business units.</p>
             {% if hours_category and hours_category != 'All' %}
             <p class="text-slate-500 text-xs font-bold mt-2">Showing employees in hours category: <span class="text-primary">{{ hours_category }}</span></p>
             {% endif %}
+            <div class="d-flex d-md-none gap-2 mt-2">
+                <span class="emp-mobile-chip inactive">{{ filtered_count }} Filtered</span>
+                <span class="emp-mobile-chip inactive">{{ business_units|length }} Units</span>
+            </div>
         </div>
-        <button class="bg-primary text-white px-6 py-2.5 rounded-lg font-semibold flex items-center gap-2 shadow-md hover:bg-primary-container active:scale-[0.98] transition-all">
-            <span class="material-symbols-outlined">person_add</span>
-            Add Employee
-        </button>
     </div>
 
     <!-- Filters Section -->
-    <div class="grid grid-cols-12 gap-4">
+    <div class="employees-filters grid grid-cols-12 gap-4">
         <!-- Business Unit Quick Filter -->
-        <div class="col-span-12 lg:col-span-5 bg-white p-2 rounded-xl border border-slate-100 shadow-soft flex gap-2 overflow-x-auto">
-            <a href="/employees?department=All&business_unit=All&hours_category=All&search_query={{ search_query|urlencode }}"
-                class="px-4 py-2 rounded-lg text-sm font-bold shadow-sm whitespace-nowrap transition-colors {% if bu_filter == 'All' %}bg-primary text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">All Employees</a>
-            {% for bu in business_units %}
-            <a href="/employees?department=All&business_unit={{ bu | urlencode }}&hours_category=All&search_query={{ search_query|urlencode }}"
-                class="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors {% if bu_filter == bu %}bg-primary text-white shadow-sm{% else %}text-slate-500 hover:bg-slate-100{% endif %}">{{ bu }}</a>
-            {% endfor %}
+        <div class="col-span-12 lg:col-span-5 bg-white p-2 rounded-xl border border-slate-100 shadow-soft bu-pills-wrap">
+            <div class="bu-pills-row">
+                <a href="/employees?department=All&business_unit=All&hours_category=All&search_query={{ search_query|urlencode }}"
+                    class="px-4 py-2 rounded-lg text-sm font-bold shadow-sm whitespace-nowrap transition-colors {% if bu_filter == 'All' %}bg-primary text-white{% else %}text-slate-600 hover:bg-slate-100{% endif %}">All Employees</a>
+                {% for bu in business_units %}
+                <a href="/employees?department=All&business_unit={{ bu | urlencode }}&hours_category=All&search_query={{ search_query|urlencode }}"
+                    class="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors {% if bu_filter == bu %}bg-primary text-white shadow-sm{% else %}text-slate-500 hover:bg-slate-100{% endif %}">{{ bu }}</a>
+                {% endfor %}
+            </div>
         </div>
         
         <!-- Dropdown Filters -->
-        <form method="GET" action="/employees" class="col-span-12 lg:col-span-7 flex gap-3">
-            <div class="relative flex-[1.5]">
-                <input type="text" name="search_query" value="{{ search_query }}" placeholder="Search Name or ID"
-                    class="w-full bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary/20 py-3 pl-10 pr-4 text-slate-700 shadow-sm transition-all focus:border-primary">
+        <form id="employeeFilterForm" method="GET" action="/employees" class="col-span-12 lg:col-span-7 grid grid-cols-12 gap-2 md:gap-3">
+            <div class="relative col-span-12 md:col-span-6">
+                <input id="employeeSearchInput" type="text" name="search_query" value="{{ search_query }}" placeholder="Search Name or ID"
+                    class="app-input w-full text-sm font-medium py-3 pl-10 pr-4 shadow-sm transition-all">
                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
             </div>
-            <div class="relative flex-1">
+            <div class="relative col-span-12 md:col-span-3">
                 <select name="department" onchange="this.form.submit()"
-                    class="w-full bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary/20 py-3 pl-4 pr-10 appearance-none text-slate-700 shadow-sm transition-all focus:border-primary cursor-pointer hover:border-slate-300">
+                    class="app-select w-full text-sm font-medium py-3 pl-4 pr-10 appearance-none shadow-sm transition-all cursor-pointer">
                     <option value="All" {% if dept_filter == 'All' %}selected{% endif %}>Dept: All</option>
                     {% for d in departments %}
                     <option value="{{ d }}" {% if dept_filter == d %}selected{% endif %}>{{ d }}</option>
@@ -67,15 +152,21 @@
                 </select>
                 <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-sm">domain</span>
             </div>
-            <div class="relative flex-1">
+            <div class="relative col-span-12 md:col-span-3">
                 <select name="employee_status" onchange="this.form.submit()"
-                    class="w-full bg-white border border-slate-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-primary/20 py-3 pl-4 pr-10 appearance-none text-slate-700 shadow-sm transition-all focus:border-primary cursor-pointer hover:border-slate-300">
+                    class="app-select w-full text-sm font-medium py-3 pl-4 pr-10 appearance-none shadow-sm transition-all cursor-pointer">
                     <option value="All" {% if status_filter == 'All' %}selected{% endif %}>Status: All</option>
                     {% for s in employee_statuses %}
                     <option value="{{ s }}" {% if status_filter == s %}selected{% endif %}>{{ s }}</option>
                     {% endfor %}
                 </select>
                 <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400 text-sm">person</span>
+            </div>
+            <div class="col-span-12 md:col-span-12 d-flex justify-content-end">
+                <button type="submit" class="btn btn-primary btn-sm px-3 d-inline-flex align-items-center gap-1">
+                    <span class="material-symbols-outlined" style="font-size:16px;">search</span>
+                    Apply
+                </button>
             </div>
             <input type="hidden" name="hours_category" value="{{ hours_category or 'All' }}" />
             <input type="hidden" name="business_unit" value="{{ bu_filter or 'All' }}" />
@@ -85,7 +176,7 @@
 
     <!-- Employee Table -->
     <div class="bg-white rounded-2xl shadow-soft border border-slate-100 overflow-hidden">
-        <div class="overflow-x-auto">
+        <div class="d-none d-md-block overflow-x-auto">
             <table class="w-full text-left whitespace-nowrap">
                 <thead>
                     <tr class="bg-slate-50 border-b border-slate-200">
@@ -152,9 +243,58 @@
                 </tbody>
             </table>
         </div>
+
+        <div class="d-block d-md-none p-3 space-y-3">
+            {% for row in records %}
+            <div class="emp-mobile-card">
+                <div class="emp-mobile-row">
+                    <div class="d-flex gap-2">
+                        <div class="w-9 h-9 rounded-full bg-slate-100 text-slate-600 border border-slate-200 d-flex align-items-center justify-content-center fw-bold">
+                            {{ row['Employee Name'][0] if row['Employee Name'] else '?' }}
+                        </div>
+                        <div>
+                            <p class="mb-0 fw-bold text-slate-800" style="font-size:0.92rem;">{{ row['Employee Name'] }}</p>
+                            <p class="mb-0 emp-mobile-meta">#{{ row['Emp ID'] }}</p>
+                        </div>
+                    </div>
+                    <span class="emp-mobile-chip {% if (row['Employee_Status']|string|lower).strip() == 'active' %}active{% else %}inactive{% endif %}">
+                        {{ row['Employee_Status'] }}
+                    </span>
+                </div>
+
+                <div class="mt-2 d-flex justify-content-between align-items-start gap-2">
+                    <div>
+                        <p class="mb-0 text-slate-700 fw-semibold" style="font-size:0.78rem;">{{ row['Department'] }}</p>
+                        <p class="mb-0 emp-mobile-meta">{{ row['Business Unit'] }}</p>
+                    </div>
+                    <div class="text-end">
+                        <p class="mb-0 fw-bold text-slate-800" style="font-size:0.85rem;">{{ "%.1f"|format(row['Total_Hours']|float) }} hrs</p>
+                        <p class="mb-0 emp-mobile-meta">{{ row['Training_Count'] }} course(s)</p>
+                    </div>
+                </div>
+
+                <div class="mt-2 d-flex justify-content-between align-items-center gap-2">
+                    <span class="emp-mobile-chip {% if row['Completed_20hrs'] %}active{% else %}inactive{% endif %}">
+                        {% if row['Completed_20hrs'] %}20h+ Completed{% else %}20h+ Pending{% endif %}
+                    </span>
+                    <button type="button" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1"
+                        onclick="showCourseModal(this)"
+                        data-emp-id="{{ row['Emp ID'] }}"
+                        data-emp-name="{{ row['Employee Name']|e }}"
+                        data-department="{{ row['Department']|e }}"
+                        data-bu="{{ row['Business Unit']|e }}"
+                        data-total-hours="{{ row['Total_Hours'] }}"
+                    >
+                        <span class="material-symbols-outlined" style="font-size:16px;">auto_stories</span>
+                        Courses
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
         
         <!-- Pagination -->
-        <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="employees-pagination px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4">
             <p class="text-xs text-slate-500 font-medium">Showing {{ records|length }} of {{ filtered_count }} entries (Total: {{ all_count }})</p>
             <div class="flex gap-2">
                 {% set prev_page = page - 1 if page > 1 else 1 %}
@@ -222,6 +362,18 @@
 {% block scripts %}
 <script>
     const employeeCourses = {{ employee_courses | tojson }};
+    const employeeSearchInput = document.getElementById('employeeSearchInput');
+    const employeeFilterForm = document.getElementById('employeeFilterForm');
+    let employeeSearchDebounce;
+
+    if (employeeSearchInput && employeeFilterForm) {
+        employeeSearchInput.addEventListener('input', () => {
+            clearTimeout(employeeSearchDebounce);
+            employeeSearchDebounce = setTimeout(() => {
+                employeeFilterForm.submit();
+            }, 550);
+        });
+    }
 
     function showCourseModal(button) {
         const empId = String(button.dataset.empId || '');

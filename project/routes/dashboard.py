@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request
-from data_processor import load_data, compute_metrics
+from project.data_processor import load_data, compute_metrics
 
 dashboard_bp = Blueprint('dashboard', __name__)
 

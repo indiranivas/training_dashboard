@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request
 import pandas as pd
-from data_processor import load_data, compute_metrics
+from project.data_processor import load_data, compute_metrics
 
 analytics_bp = Blueprint('analytics', __name__)
 
@@ -8,15 +8,33 @@ analytics_bp = Blueprint('analytics', __name__)
 def analytics():
     df = load_data()
 
+    departments = sorted([str(d) for d in df['Department'].dropna().unique()])
+    business_units = sorted([str(b) for b in df['Business Unit'].dropna().unique()])
+
     dept_filter = request.args.get('department', 'All')
     bu_filter = request.args.get('business_unit', 'All')
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
+    quarter_filter = request.args.get('quarter', 'All')
+
+    start_dates = pd.to_datetime(df.get('Start Date'), errors='coerce')
 
     if start_date:
-        df = df[pd.to_datetime(df['Start Date'], errors='coerce') >= pd.to_datetime(start_date)]
+        df = df[start_dates >= pd.to_datetime(start_date)]
+        start_dates = pd.to_datetime(df.get('Start Date'), errors='coerce')
     if end_date:
-        df = df[pd.to_datetime(df['End Date'], errors='coerce') <= pd.to_datetime(end_date)]
+        end_dates = pd.to_datetime(df.get('End Date'), errors='coerce')
+        df = df[end_dates <= pd.to_datetime(end_date)]
+        start_dates = pd.to_datetime(df.get('Start Date'), errors='coerce')
+
+    quarter_months = {
+        'Q1': [1, 2, 3],
+        'Q2': [4, 5, 6],
+        'Q3': [7, 8, 9],
+        'Q4': [10, 11, 12],
+    }
+    if quarter_filter in quarter_months:
+        df = df[start_dates.dt.month.isin(quarter_months[quarter_filter])]
 
     if dept_filter != 'All':
         df = df[df['Department'] == dept_filter]
@@ -61,11 +79,16 @@ def analytics():
 
     return render_template(
         "Analytics.html",
+        departments=departments,
+        business_units=business_units,
+        dept_filter=dept_filter,
+        bu_filter=bu_filter,
         months=months,
         trend_total=trend_total,
         trend_certified=trend_certified,
         dept_labels=dept_labels,
         dept_rates=dept_rates,
         total_records=len(df),
-        metrics=metrics
+        metrics=metrics,
+        quarter_filter=quarter_filter
     )

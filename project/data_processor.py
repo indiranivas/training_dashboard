@@ -2,7 +2,7 @@ import os
 import re
 import json
 import pandas as pd
-from genai_helper import build_categorical_index, reset_categorical_index
+from project.genai_helper import build_categorical_index, reset_categorical_index
 
 CONFIG_FILE = os.path.join(os.path.dirname(__file__), "data_config.json")
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data_files")
