@@ -120,6 +120,14 @@
         <header class="w-full top-0 sticky z-40 bg-white/80 backdrop-blur-md flex justify-between items-center px-8 h-16 border-b border-slate-200">
             <div class="flex items-center gap-4">
                 <h2 class="text-lg font-bold text-slate-800">{% block header_title %}Training Analytics{% endblock %}</h2>
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold border border-primary/20">
+                    <span class="material-symbols-outlined text-sm" style="font-variation-settings:'FILL' 1;">calendar_month</span>
+                    {% if current_page == 'compare' and year_a and year_b %}
+                        Years: {{ year_a }} vs {{ year_b }}
+                    {% else %}
+                        Loaded Year: {{ loaded_year_label }}
+                    {% endif %}
+                </span>
                 {% block header_context %}{% endblock %}
             </div>
             <div class="flex items-center gap-6">

@@ -1,6 +1,7 @@
 from flask import Flask
 from urllib.parse import quote_plus
 import os
+from data_processor import get_active_year
 
 # Import blueprints
 from routes.dashboard import dashboard_bp
@@ -16,6 +17,16 @@ app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'dev_secret_key_training_lnd
 
 # URL encoder for dashboards to handle special chars like ampersand safely
 app.jinja_env.filters['urlencode'] = lambda value: quote_plus(str(value))
+
+
+@app.context_processor
+def inject_loaded_year():
+    """Expose the active dataset year to all templates."""
+    active_year = get_active_year()
+    return {
+        "loaded_year": active_year,
+        "loaded_year_label": active_year if active_year else "Default",
+    }
 
 # Register blueprints
 app.register_blueprint(dashboard_bp)
