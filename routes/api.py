@@ -214,6 +214,11 @@ def export_excel():
     """Export analytics category tables as Excel"""
     try:
         from openpyxl.chart import BarChart, Reference
+        from openpyxl.chart.label import DataLabelList
+        from openpyxl.chart.data_source import AxDataSource, StrRef
+        from openpyxl.chart.series import DataPoint
+        from openpyxl.styles import Font
+        from openpyxl.utils import get_column_letter
 
         df = load_data()
         
@@ -292,24 +297,67 @@ def export_excel():
                 columns=['Category', 'Employees']
             )
 
-        def add_bar_chart(target_ws, source_ws, title, anchor, min_col, max_col, min_row, max_row, cat_col, chart_type='bar'):
+        def add_bar_chart(
+            target_ws,
+            source_ws,
+            title,
+            anchor,
+            min_col,
+            max_col,
+            min_row,
+            max_row,
+            cat_col,
+            chart_type='bar',
+            width=8.0,
+            height=5.2,
+        ):
             if max_row <= min_row:
                 return
             chart = BarChart()
             chart.type = chart_type
-            chart.style = 10
-            chart.title = title
-            chart.height = 7
-            chart.width = 11
-            chart.y_axis.title = source_ws.cell(row=1, column=min_col).value
-            chart.x_axis.title = source_ws.cell(row=1, column=cat_col).value
-            if chart_type == 'bar':
-                chart.y_axis.title, chart.x_axis.title = chart.x_axis.title, chart.y_axis.title
-            data = Reference(source_ws, min_col=min_col, max_col=max_col, min_row=min_row, max_row=max_row)
-            categories = Reference(source_ws, min_col=cat_col, min_row=min_row + 1, max_row=max_row)
-            chart.add_data(data, titles_from_data=True)
-            chart.set_categories(categories)
-            chart.legend.position = 'r'
+            chart.style = 2
+            chart.height = height
+            chart.width = width
+            chart.grouping = 'clustered'
+            chart.overlap = 0
+            chart.varyColors = True
+
+            data = Reference(source_ws, min_col=min_col, max_col=max_col, min_row=min_row + 1, max_row=max_row)
+            chart.add_data(data, titles_from_data=False, from_rows=False)
+
+            # Force string category references so Excel renders clean axis labels.
+            cat_col_letter = get_column_letter(cat_col)
+            category_ref = f"'{source_ws.title}'!${cat_col_letter}${min_row + 1}:${cat_col_letter}${max_row}"
+            for series in chart.series:
+                series.cat = AxDataSource(strRef=StrRef(f=category_ref))
+
+            chart.legend = None
+            chart.x_axis.majorGridlines = None
+            chart.y_axis.majorGridlines = None
+            chart.x_axis.title = None
+            chart.y_axis.title = None
+            chart.dataLabels = DataLabelList()
+            chart.dataLabels.showVal = True
+            chart.dataLabels.showCatName = False
+            chart.dataLabels.showSerName = False
+            chart.dataLabels.showLegendKey = False
+            chart.dataLabels.showPercent = False
+            chart.dataLabels.dLblPos = 'outEnd'
+            chart.gapWidth = 90
+
+            palette = [
+                "4F81BD", "C0504D", "9BBB59", "8064A2", "4BACC6",
+                "F79646", "2E75B6", "70AD47", "A5A5A5", "FFC000"
+            ]
+            for series in chart.series:
+                point_count = max(0, max_row - min_row)
+                series.dPt = []
+                for point_idx in range(point_count):
+                    point = DataPoint(idx=point_idx)
+                    point.graphicalProperties.solidFill = palette[point_idx % len(palette)]
+                    point.graphicalProperties.line.solidFill = palette[point_idx % len(palette)]
+                    series.dPt.append(point)
+
             target_ws.add_chart(chart, anchor)
         
         # Create Excel buffer
@@ -343,16 +391,31 @@ def export_excel():
 
             workbook = writer.book
             charts_ws = workbook.create_sheet(title='Charts')
+            charts_ws.sheet_view.showGridLines = False
             charts_ws['A1'] = 'Analytics Visuals'
             charts_ws['A2'] = f"Department: {dept_filter}"
             charts_ws['A3'] = f"Business Unit: {bu_filter}"
             charts_ws['A4'] = f"Date Range: {start_date or 'N/A'} to {end_date or 'N/A'}"
+            charts_ws['A1'].font = Font(bold=True, size=16)
+            for cell in ['A2', 'A3', 'A4']:
+                charts_ws[cell].font = Font(bold=True)
+
+            chart_titles = {
+                'A6': 'Department Completion %',
+                'T6': 'Business Unit Completion %',
+                'A23': 'Training Type Share',
+                'T23': 'Training Type Share (20H+)',
+                'A40': 'Overall Hours Category Distribution',
+            }
+            for cell, title in chart_titles.items():
+                charts_ws[cell] = title
+                charts_ws[cell].font = Font(bold=True, size=12)
 
             add_bar_chart(
                 charts_ws,
                 writer.sheets['Dept Completion'],
                 'Department Completion %',
-                'A6',
+                'A7',
                 2,
                 2,
                 1,
@@ -364,7 +427,7 @@ def export_excel():
                 charts_ws,
                 writer.sheets['BU Completion'],
                 'Business Unit Completion %',
-                'J6',
+                'T7',
                 2,
                 2,
                 1,
@@ -376,7 +439,7 @@ def export_excel():
                 charts_ws,
                 writer.sheets['Training Type Share'],
                 'Training Type Share',
-                'A22',
+                'A24',
                 2,
                 2,
                 1,
@@ -388,7 +451,7 @@ def export_excel():
                 charts_ws,
                 writer.sheets['20H+ Type Share'],
                 'Training Type Share (20H+)',
-                'J22',
+                'T24',
                 2,
                 2,
                 1,
@@ -400,7 +463,7 @@ def export_excel():
                 charts_ws,
                 writer.sheets['Hours Distribution'],
                 'Overall Hours Category Distribution',
-                'A38',
+                'A41',
                 2,
                 2,
                 1,
@@ -540,6 +603,41 @@ def export_pdf():
                 for key in totals:
                     totals[key] += int(data.get(key, 0))
             return totals
+
+        def build_highlights_panel():
+            dept_pairs = sorted(_series_pairs(metrics.get('dept')), key=lambda item: item[1], reverse=True)
+            bu_pairs = sorted(_series_pairs(metrics.get('bu')), key=lambda item: item[1], reverse=True)
+            ttype_pairs = sorted(_series_pairs(metrics.get('ttype')), key=lambda item: item[1], reverse=True)
+            ttype_20_pairs = sorted(_series_pairs(metrics.get('ttype_20hrs')), key=lambda item: item[1], reverse=True)
+
+            highlight_items = [
+                ("Top Department", f"{dept_pairs[0][0]} ({dept_pairs[0][1]:.1f}%)" if dept_pairs else "N/A"),
+                ("Top Business Unit", f"{bu_pairs[0][0]} ({bu_pairs[0][1]:.1f}%)" if bu_pairs else "N/A"),
+                ("Top Training Type", f"{ttype_pairs[0][0]} ({ttype_pairs[0][1]:.1f}%)" if ttype_pairs else "N/A"),
+                ("Top 20H+ Type", f"{ttype_20_pairs[0][0]} ({ttype_20_pairs[0][1]:.1f}%)" if ttype_20_pairs else "N/A"),
+                ("Training Records", str(len(df))),
+                ("Avg Session Hours", str(metrics.get('avg_hours', 0))),
+            ]
+
+            cells = []
+            for label_text, value_text in highlight_items:
+                cells.append(Paragraph(
+                    f"<font color='#64748b'>{label_text}</font><br/><b>{_truncate(value_text, 38)}</b>",
+                    styles['CardText'],
+                ))
+
+            table = Table([cells[:3], cells[3:]], colWidths=[3.22 * inch] * 3)
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), colors.white),
+                ('BOX', (0, 0), (-1, -1), 0.6, colors.HexColor('#cbd5e1')),
+                ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e2e8f0')),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ('LEFTPADDING', (0, 0), (-1, -1), 10),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ]))
+            return table
 
         def build_metric_cards():
             card_items = [
@@ -768,7 +866,12 @@ def export_pdf():
         story.append(Paragraph("<b>Snapshot Metrics</b>", styles['SectionTitle']))
         story.append(Spacer(1, 0.12 * inch))
         story.append(build_metric_cards())
-        story.append(Spacer(1, 0.2 * inch))
+        story.append(Spacer(1, 0.16 * inch))
+        story.append(Paragraph("<b>Highlights</b>", styles['SectionTitle']))
+        story.append(Spacer(1, 0.08 * inch))
+        story.append(build_highlights_panel())
+
+        story.append(PageBreak())
         story.append(Paragraph("<b>Visual Summary</b>", styles['SectionTitle']))
         story.append(Spacer(1, 0.1 * inch))
 
@@ -800,17 +903,17 @@ def export_pdf():
 
         story.append(PageBreak())
         story.append(Paragraph("<b>Training Type Insights</b>", styles['SectionTitle']))
-        story.append(Spacer(1, 0.1 * inch))
+        story.append(Spacer(1, 0.08 * inch))
         story.append(Paragraph(
             "Comparison of overall training mix versus training types that reached 20+ planned hours.",
             styles['Subtle'],
         ))
-        story.append(Spacer(1, 0.14 * inch))
+        story.append(Spacer(1, 0.1 * inch))
 
         training_type_grid = Table([
             [
-                build_horizontal_bar_chart("Training Type Share (All)", ttype_pairs, max_value=100, suffix='%'),
-                build_horizontal_bar_chart("Training Type Share (20H+ Completion)", ttype_20_pairs, max_value=100, suffix='%'),
+                build_horizontal_bar_chart("Training Type Share (All)", ttype_pairs, width=340, height=150, max_value=100, suffix='%'),
+                build_horizontal_bar_chart("Training Type Share (20H+ Completion)", ttype_20_pairs, width=340, height=150, max_value=100, suffix='%'),
             ],
         ], colWidths=[4.92 * inch, 4.92 * inch])
         training_type_grid.setStyle(TableStyle([
@@ -821,19 +924,18 @@ def export_pdf():
             ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
         ]))
         story.append(training_type_grid)
+        story.append(Spacer(1, 0.12 * inch))
+        story.append(build_hours_category_table(
+            "Business Unit Training Hours Categories",
+            "Business Unit",
+            metrics.get('bu_hours_categories', {}),
+        ))
 
         story.append(PageBreak())
         story.append(build_hours_category_table(
             "Department-wise Training Hours Categories",
             "Department",
             metrics.get('dept_hours_categories', {}),
-        ))
-
-        story.append(PageBreak())
-        story.append(build_hours_category_table(
-            "Business Unit Training Hours Categories",
-            "Business Unit",
-            metrics.get('bu_hours_categories', {}),
         ))
         
         # Build PDF
